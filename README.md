@@ -1,4 +1,4 @@
-# FGs odlingsapp (Canva-stil + Firebase)
+# Systrarna Hills Odling (Canva-stil + Firebase)
 
 Detta är din Canva-design, men med Firebase Firestore istället för Canva dataSdk.
 

@@ -96,7 +96,7 @@ window.showTab = function(tab){
 
 // ---------- Init ----------
 function init(){
-  document.getElementById("app-title").innerHTML = "🌱 FGs odlingsapp";
+  /* Title handled by header logo */
 
   const sowDateEl = document.getElementById("sow-date");
   if (sowDateEl) sowDateEl.value = todayISO();

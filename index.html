@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>FGs odlingsapp</title>
+  <title>Systrarna Hills Odling</title>
   <meta name="theme-color" content="#047857" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon-192.png" />
@@ -22,16 +22,48 @@
     .calendar-day { min-height: 80px; }
     .calendar-task { font-size: 0.7rem; }
     html, body, #app { height: 100%; }
-  </style>
+  
+    /* Logo animation + styling */
+    .logo-wrap{
+      background: rgba(236,253,245,0.14);
+      border: 1px solid rgba(236,253,245,0.25);
+      border-radius: 22px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    .logo-img{
+      max-height: 7.5rem; /* ~120px */
+      width: auto;
+      object-fit: contain;
+      border-radius: 18px;
+      animation: popIn 600ms cubic-bezier(.2,1.2,.2,1) both;
+      transform-origin: center;
+    }
+    @keyframes popIn{
+      0%{ opacity:0; transform: translateY(10px) scale(0.92); filter: blur(2px); }
+      60%{ opacity:1; transform: translateY(0) scale(1.02); filter: blur(0); }
+      100%{ opacity:1; transform: translateY(0) scale(1); }
+    }
+    @media (min-width: 640px){
+      .logo-img{ max-height: 10.5rem; } /* ~168px */
+    }
+</style>
   <style>body { box-sizing: border-box; }</style>
 </head>
 
 <body class="h-full bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 overflow-auto">
   <div id="app" class="w-full h-full flex flex-col">
     <!-- Header -->
-    <header class="bg-gradient-to-r from-emerald-700 to-green-600 text-white p-4 shadow-lg flex-shrink-0">
+    <header class="bg-gradient-to-r from-emerald-700 to-green-600 text-white p-4 shadow-lg flex-shrink-0 overflow-hidden">
       <div class="max-w-6xl mx-auto">
-        <h1 id="app-title" class="text-2xl font-extrabold flex items-center gap-2">🌱 FGs odlingsapp</h1>
+        <div class="flex flex-col items-center justify-center">
+          <div class="logo-wrap mt-1 mb-2">
+            <img src="/assets/logo.png" alt="Systrarna Hills Odling" class="logo-img" />
+          </div>
+          <h1 class="text-lg sm:text-xl font-extrabold tracking-wide drop-shadow" aria-label="Systrarna Hills Odling">
+            Systrarna Hills Odling
+          </h1>
+        </div>
       </div>
     </header>
 

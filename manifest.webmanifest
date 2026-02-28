@@ -1,6 +1,6 @@
 {
-  "name": "FGs odlingsapp",
-  "short_name": "FGs odling",
+  "name": "Systrarna Hills Odling",
+  "short_name": "Hills Odling",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ecfdf5",
