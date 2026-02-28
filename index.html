@@ -27,35 +27,28 @@
     /* ~168px */
     }
 
-    /* Sticky logo + glow (compact header) */
+    /* Sticky logo + glow (always compact) */
     .logo-img{
-      max-height: 160px;
+      max-height: 74px; /* always small */
       width: auto;
       object-fit: contain;
-      border-radius: 18px;
-      /* glow */
-      filter:
-        drop-shadow(0 10px 28px rgba(4, 120, 87, 0.28))
-        drop-shadow(0 2px 10px rgba(16, 185, 129, 0.22));
-      animation: popIn 600ms cubic-bezier(.2,1.2,.2,1) both;
-      transition: max-height 200ms ease, transform 200ms ease, filter 200ms ease;
-    }
-    #appHeader.is-scrolled .logo-img{
-      max-height: 72px;
-      transform: translateY(-2px);
+      border-radius: 16px;
       filter:
         drop-shadow(0 6px 16px rgba(4, 120, 87, 0.22))
         drop-shadow(0 2px 8px rgba(16, 185, 129, 0.16));
+      transition: transform 200ms ease, filter 200ms ease;
     }
-    #appHeader.is-scrolled .h-1{
-      width: 5rem;
-      opacity: 0.85;
-      margin-top: 10px;
-      transition: all 200ms ease;
+    .logo-img:active{
+      transform: scale(0.99);
+    }
+    /* Optional: little extra glow when at top */
+    #appHeader.is-top .logo-img{
+      filter:
+        drop-shadow(0 10px 26px rgba(4, 120, 87, 0.28))
+        drop-shadow(0 3px 12px rgba(16, 185, 129, 0.20));
     }
     @media (min-width: 640px){
-      .logo-img{ max-height: 220px; }
-      #appHeader.is-scrolled .logo-img{ max-height: 86px; }
+      .logo-img{ max-height: 86px; }
     }
 </style>
   <style>body { box-sizing: border-box; }</style>
@@ -300,18 +293,19 @@
       window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
     }
   </script>
-  <script>
-    // Sticky logo: shrink header when scrolling
+    <script>
+    // Keep header sticky; add a subtle glow when at top
     (function(){
       const header = document.getElementById('appHeader');
       if(!header) return;
       const onScroll = () => {
-        if(window.scrollY > 18) header.classList.add('is-scrolled');
-        else header.classList.remove('is-scrolled');
+        if(window.scrollY <= 6) header.classList.add('is-top');
+        else header.classList.remove('is-top');
       };
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
     })();
   </script>
+
 </body>
 </html>
