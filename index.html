@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>FGs odlingsapp</title>
-  <meta name="theme-color" content="#0f766e" />
+  <meta name="theme-color" content="#047857" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon-192.png" />
   <link rel="stylesheet" href="/styles.css" />
@@ -13,14 +13,14 @@
   <header class="topbar">
     <div class="topbar__inner">
       <div class="brand">
-        <div class="brand__logo" aria-hidden="true">🌱</div>
+        <div class="brand__logo" aria-hidden="true">🌿</div>
         <div class="brand__text">
           <div class="brand__title">FGs odlingsapp</div>
-          <div class="brand__sub">Delad sådd- och skötseldagbok (öppen)</div>
+          <div class="brand__sub">Delad odlingsdagbok för Elin & Louise</div>
         </div>
       </div>
 
-      <!-- Syns bara på större skärmar -->
+      <!-- Desktop-meny -->
       <nav class="nav" aria-label="Meny">
         <a href="#oversikt">Översikt</a>
         <a href="#sorter">Sorter</a>
@@ -29,12 +29,23 @@
         <a href="#utvardering">Utvärdering</a>
       </nav>
     </div>
+
+    <!-- Mobil: snabbmeny (inte fixed; bara en rad) -->
+    <div class="mobile-tabs" aria-label="Snabbmeny">
+      <a href="#oversikt">Översikt</a>
+      <a href="#sorter">Sorter</a>
+      <a href="#sadd">Sådd</a>
+      <a href="#batchar">Batchar</a>
+      <a href="#utvardering">Utv.</a>
+    </div>
   </header>
 
   <main class="container">
     <section id="oversikt" class="card">
-      <h2>Översikt</h2>
-      <p class="muted">Allt sparas direkt i Firebase Firestore. Ingen inloggning behövs.</p>
+      <div class="card__head">
+        <h2>Översikt</h2>
+        <p class="muted">Allt sparas direkt i Firebase Firestore. Ingen inloggning.</p>
+      </div>
 
       <div class="stats">
         <div class="stat">
@@ -54,26 +65,12 @@
           <div class="stat__value" id="statRemaining">0</div>
         </div>
       </div>
-
-      <details class="details">
-        <summary>Inställningar</summary>
-        <div class="row">
-          <label class="field">
-            <span>Dagbok-ID (dela med din syster genom att ha samma)</span>
-            <input id="diaryIdInput" type="text" placeholder="t.ex. fgs-2026" />
-          </label>
-          <button class="btn" id="saveDiaryBtn">Spara</button>
-        </div>
-        <p class="muted tiny">
-          Tips: sätt t.ex. <code>fgs-2026</code>. Alla med länken kan då se och skriva (öppen dagbok).
-        </p>
-      </details>
     </section>
 
     <section id="sorter" class="card">
       <div class="card__head">
         <h2>Sorter</h2>
-        <p class="muted">Lägg till frösorter ni odlar.</p>
+        <p class="muted">Lägg till frösorter och skötselanteckningar.</p>
       </div>
 
       <form id="varietyForm" class="form">
@@ -89,7 +86,7 @@
         </div>
         <label class="field">
           <span>Skötsel (valfritt)</span>
-          <textarea name="care" rows="3" placeholder="Sådjup, temperatur, omplantering, avstånd, gödsel…"></textarea>
+          <textarea name="care" rows="3" placeholder="Sådjup, temperatur, omskolning, avstånd, gödsel…"></textarea>
         </label>
 
         <div class="row">
@@ -98,7 +95,19 @@
         </div>
       </form>
 
-      <div id="varietyList" class="list"></div>
+      <div class="table-wrap">
+        <table class="table" aria-label="Sorter">
+          <thead>
+            <tr>
+              <th>Sort</th>
+              <th>Typ</th>
+              <th>Skötsel</th>
+              <th class="col-actions">Åtgärder</th>
+            </tr>
+          </thead>
+          <tbody id="varietyTbody"></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="sadd" class="card">
@@ -139,10 +148,28 @@
     <section id="batchar" class="card">
       <div class="card__head">
         <h2>Batchar</h2>
-        <p class="muted">Här minskar du “kvar” när någon tar/bytar plantor eller om något dör.</p>
+        <p class="muted">Minska “kvar” per batch när någon tar plantor, omskolar eller om något dör.</p>
       </div>
 
-      <div id="batchList" class="list"></div>
+      <div class="table-wrap">
+        <table class="table" aria-label="Batchar">
+          <thead>
+            <tr>
+              <th>Sort</th>
+              <th>Sådd</th>
+              <th class="num">Sådda</th>
+              <th class="num">Kvar</th>
+              <th class="num">Omskolade</th>
+              <th>Anteckning</th>
+              <th class="col-actions">Åtgärder</th>
+            </tr>
+          </thead>
+          <tbody id="batchTbody"></tbody>
+        </table>
+      </div>
+      <p class="muted tiny" style="margin-top:10px;">
+        Tips: “Ta plantor” kan vara när ni byter med varandra. “Förlust” när något dör.
+      </p>
     </section>
 
     <section id="utvardering" class="card">
@@ -171,13 +198,23 @@
         <button class="btn btn--primary" type="submit">Spara utvärdering</button>
       </form>
 
-      <div id="evalList" class="list"></div>
+      <div class="table-wrap">
+        <table class="table" aria-label="Utvärderingar">
+          <thead>
+            <tr>
+              <th>Sort</th>
+              <th class="num">Betyg</th>
+              <th>Kommentar</th>
+              <th class="col-actions">Åtgärder</th>
+            </tr>
+          </thead>
+          <tbody id="evalTbody"></tbody>
+        </table>
+      </div>
     </section>
 
     <footer class="footer muted tiny">
-      <div>
-        <strong>Tips:</strong> Om något inte syns direkt — uppdatera sidan. Firestore synkar live när den är igång.
-      </div>
+      <div><strong>FGs odlingsapp</strong> – sparar live i Firestore.</div>
     </footer>
   </main>
 
@@ -185,7 +222,6 @@
 
   <script type="module" src="/app.js"></script>
   <script>
-    // PWA
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
     }

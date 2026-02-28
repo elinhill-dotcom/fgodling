@@ -1,6 +1,6 @@
-// FGs odlingsapp (öppen) – Firestore (ingen auth)
+// FGs odlingsapp – Firestore (öppen, ingen auth)
 //
-// 1) Klistra in din firebaseConfig här (du kan lämna den som den är nu):
+// Firebase-konfiguration (din)
 const firebaseConfig = {
   apiKey: "AIzaSyDGx3Opxm3L-ag9p2iOr7o_PACg5ADdLNc",
   authDomain: "fgsodling.firebaseapp.com",
@@ -14,17 +14,19 @@ const firebaseConfig = {
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, serverTimestamp, runTransaction, getDoc
+  onSnapshot, query, orderBy, serverTimestamp, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ---------- UI helpers ----------
-const $ = (sel) => document.querySelector(sel);
+// Fast dagbok för er två (ingen inställning behövs)
+const DIARY_ID = "fgs-elin-louise";
+
+// UI helpers
+const $ = (s) => document.querySelector(s);
 const toastEl = $("#toast");
 let toastTimer = null;
-
 function toast(msg){
   if(!toastEl) return;
   toastEl.textContent = msg;
@@ -38,81 +40,56 @@ function clampInt(n, min=0){
   if(Number.isNaN(x)) return min;
   return Math.max(min, Math.floor(x));
 }
-
 function formatDate(iso){
   if(!iso) return "—";
-  try{
-    const d = new Date(iso);
-    return d.toLocaleDateString("sv-SE");
-  }catch{
-    return iso;
-  }
+  try{ return new Date(iso).toLocaleDateString("sv-SE"); } catch { return iso; }
+}
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-// ---------- Diary ID (delning) ----------
-const LS_KEY = "fgs_diary_id";
-let DIARY_ID = localStorage.getItem(LS_KEY) || "fgs-2026";
+// Refs
+const varietiesRef = collection(db, "diaries", DIARY_ID, "varieties");
+const batchesRef   = collection(db, "diaries", DIARY_ID, "batches");
+const evalsRef     = collection(db, "diaries", DIARY_ID, "evaluations");
 
-const diaryIdInput = $("#diaryIdInput");
-const saveDiaryBtn = $("#saveDiaryBtn");
-if(diaryIdInput) diaryIdInput.value = DIARY_ID;
-if(saveDiaryBtn){
-  saveDiaryBtn.addEventListener("click", () => {
-    const val = (diaryIdInput?.value || "").trim();
-    if(!val) return toast("Skriv ett dagbok-ID");
-    DIARY_ID = val;
-    localStorage.setItem(LS_KEY, DIARY_ID);
-    toast("Dagbok-ID sparat ✅");
-    // resubscribe
-    unsubscribeAll?.();
-    startSubscriptions();
-  });
-}
-
-// ---------- Refs ----------
-const varietiesRef = () => collection(db, "diaries", DIARY_ID, "varieties");
-const batchesRef = () => collection(db, "diaries", DIARY_ID, "batches");
-const evalsRef = () => collection(db, "diaries", DIARY_ID, "evaluations");
-
-// ---------- State ----------
+// State
 let varieties = [];
 let batches = [];
 let evaluations = [];
-let unsubscribeAll = null;
 
-// ---------- Subscriptions ----------
-function startSubscriptions(){
-  const unsubs = [];
-
-  unsubs.push(onSnapshot(query(varietiesRef(), orderBy("createdAt", "desc")), (snap) => {
-    varieties = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderVarieties();
-    renderSelects();
-    renderStats();
-  }));
-
-  unsubs.push(onSnapshot(query(batchesRef(), orderBy("createdAt", "desc")), (snap) => {
-    batches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderBatches();
-    renderStats();
-  }));
-
-  unsubs.push(onSnapshot(query(evalsRef(), orderBy("updatedAt", "desc")), (snap) => {
-    evaluations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderEvaluations();
-  }));
-
-  unsubscribeAll = () => unsubs.forEach(fn => fn());
-}
-startSubscriptions();
-
-// ---------- Rendering ----------
-const varietyList = $("#varietyList");
+// Elements
+const varietyTbody = $("#varietyTbody");
+const batchTbody = $("#batchTbody");
+const evalTbody = $("#evalTbody");
 const varietySelect = $("#varietySelect");
 const evalSelect = $("#evalSelect");
-const batchList = $("#batchList");
-const evalList = $("#evalList");
 
+// Subscriptions
+onSnapshot(query(varietiesRef, orderBy("createdAt", "desc")), (snap) => {
+  varieties = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderVarieties();
+  renderSelects();
+  renderStats();
+});
+
+onSnapshot(query(batchesRef, orderBy("createdAt", "desc")), (snap) => {
+  batches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderBatches();
+  renderStats();
+});
+
+onSnapshot(query(evalsRef, orderBy("updatedAt", "desc")), (snap) => {
+  evaluations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderEvals();
+});
+
+// Render
 function renderStats(){
   $("#statVarieties").textContent = String(varieties.length);
   $("#statBatches").textContent = String(batches.length);
@@ -135,110 +112,100 @@ function renderSelects(){
     if(cur) varietySelect.value = cur;
   }
   if(evalSelect){
-    const cur2 = evalSelect.value;
+    const cur = evalSelect.value;
     evalSelect.innerHTML = `<option value="">Välj sort…</option>` + opts;
-    if(cur2) evalSelect.value = cur2;
+    if(cur) evalSelect.value = cur;
   }
-
   const hint = $("#varietyHint");
-  if(hint){
-    hint.textContent = varieties.length ? "" : "Lägg till minst 1 sort först.";
-  }
+  if(hint) hint.textContent = varieties.length ? "" : "Lägg till minst 1 sort först.";
 }
 
 function renderVarieties(){
-  if(!varietyList) return;
+  if(!varietyTbody) return;
   if(!varieties.length){
-    varietyList.innerHTML = `<div class="muted tiny">Inga sorter än. Lägg till en ovan.</div>`;
+    varietyTbody.innerHTML = `<tr><td colspan="4" class="muted">Inga sorter än. Lägg till en ovan.</td></tr>`;
     return;
   }
 
-  varietyList.innerHTML = varieties.map(v => {
+  varietyTbody.innerHTML = varieties.map(v => {
     const care = (v.care || "").trim();
     const type = (v.type || "").trim();
     return `
-      <div class="item">
-        <div class="item__title">${escapeHtml(v.name || "Okänd sort")}</div>
-        <div class="item__meta">
-          ${type ? `<span class="chip">Typ: <strong>${escapeHtml(type)}</strong></span>` : ``}
-          <span class="chip">Skapad: <strong>${formatDate(v.createdAt?.toDate?.()?.toISOString?.() || "")}</strong></span>
-        </div>
-        ${care ? `<div class="muted tiny" style="margin-top:8px; white-space:pre-wrap;">${escapeHtml(care)}</div>` : ``}
-        <div class="item__actions">
-          <button class="btn" data-action="editVariety" data-id="${v.id}">Redigera</button>
-          <button class="btn btn--danger" data-action="deleteVariety" data-id="${v.id}">Ta bort</button>
-        </div>
-      </div>
+      <tr>
+        <td><span class="pill">${escapeHtml(v.name || "Okänd sort")}</span></td>
+        <td>${type ? escapeHtml(type) : `<span class="muted">—</span>`}</td>
+        <td style="white-space:pre-wrap;">${care ? escapeHtml(care) : `<span class="muted">—</span>`}</td>
+        <td class="col-actions">
+          <div class="actions">
+            <button class="btn" data-action="editVariety" data-id="${v.id}">Redigera</button>
+            <button class="btn btn--danger" data-action="deleteVariety" data-id="${v.id}">Ta bort</button>
+          </div>
+        </td>
+      </tr>
     `;
   }).join("");
 }
 
 function renderBatches(){
-  if(!batchList) return;
+  if(!batchTbody) return;
   if(!batches.length){
-    batchList.innerHTML = `<div class="muted tiny">Inga batchar än. Registrera en sådd ovan.</div>`;
+    batchTbody.innerHTML = `<tr><td colspan="7" class="muted">Inga batchar än. Registrera en sådd ovan.</td></tr>`;
     return;
   }
 
-  // Sortera nyast först (snapshot är redan desc, men säkrar)
-  const sorted = batches.slice().sort((a,b)=> (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
-
-  batchList.innerHTML = sorted.map(b => {
+  batchTbody.innerHTML = batches.map(b => {
     const v = varieties.find(x => x.id === b.varietyId);
     const name = b.varietyName || v?.name || "Okänd sort";
+    const sown = clampInt(b.sownCount, 0);
     const remaining = clampInt(b.remainingCount, 0);
     const potted = clampInt(b.pottedCount, 0);
-    const sown = clampInt(b.sownCount, 0);
-
     return `
-      <div class="item">
-        <div class="item__title">${escapeHtml(name)}</div>
-        <div class="item__meta">
-          <span class="chip">Sådd: <strong>${formatDate(b.sownDate)}</strong></span>
-          <span class="chip">Sådda: <strong>${sown}</strong></span>
-          <span class="chip">Kvar: <strong>${remaining}</strong></span>
-          <span class="chip">Omskolade: <strong>${potted}</strong></span>
-        </div>
-        ${b.note ? `<div class="muted tiny" style="margin-top:8px;">${escapeHtml(b.note)}</div>` : ``}
-
-        <div class="item__actions">
-          <button class="btn" data-action="take" data-id="${b.id}">🤝 Ta plantor</button>
-          <button class="btn" data-action="pot" data-id="${b.id}">🪴 Omskola</button>
-          <button class="btn" data-action="loss" data-id="${b.id}">🥀 Förlust</button>
-          <button class="btn btn--danger" data-action="deleteBatch" data-id="${b.id}">Ta bort batch</button>
-        </div>
-      </div>
+      <tr>
+        <td><span class="pill">${escapeHtml(name)}</span></td>
+        <td>${formatDate(b.sownDate)}</td>
+        <td class="num">${sown}</td>
+        <td class="num">${remaining}</td>
+        <td class="num">${potted}</td>
+        <td>${b.note ? escapeHtml(b.note) : `<span class="muted">—</span>`}</td>
+        <td class="col-actions">
+          <div class="actions">
+            <button class="btn" data-action="take" data-id="${b.id}">Ta plantor</button>
+            <button class="btn" data-action="pot" data-id="${b.id}">Omskola</button>
+            <button class="btn" data-action="loss" data-id="${b.id}">Förlust</button>
+            <button class="btn btn--danger" data-action="deleteBatch" data-id="${b.id}">Ta bort</button>
+          </div>
+        </td>
+      </tr>
     `;
   }).join("");
 }
 
-function renderEvaluations(){
-  if(!evalList) return;
+function renderEvals(){
+  if(!evalTbody) return;
   if(!evaluations.length){
-    evalList.innerHTML = `<div class="muted tiny">Inga utvärderingar än.</div>`;
+    evalTbody.innerHTML = `<tr><td colspan="4" class="muted">Inga utvärderingar än.</td></tr>`;
     return;
   }
 
-  evalList.innerHTML = evaluations.map(e => {
+  evalTbody.innerHTML = evaluations.map(e => {
     const v = varieties.find(x => x.id === e.varietyId);
     const name = e.varietyName || v?.name || "Okänd sort";
     return `
-      <div class="item">
-        <div class="item__title">${escapeHtml(name)}</div>
-        <div class="item__meta">
-          <span class="chip">Betyg: <strong>${escapeHtml(String(e.rating || ""))}/5</strong></span>
-          <span class="chip">Uppdaterad: <strong>${formatDate(e.updatedAt?.toDate?.()?.toISOString?.() || "")}</strong></span>
-        </div>
-        ${e.comment ? `<div class="muted tiny" style="margin-top:8px; white-space:pre-wrap;">${escapeHtml(e.comment)}</div>` : ``}
-        <div class="item__actions">
-          <button class="btn" data-action="deleteEval" data-id="${e.id}">Ta bort</button>
-        </div>
-      </div>
+      <tr>
+        <td><span class="pill">${escapeHtml(name)}</span></td>
+        <td class="num">${escapeHtml(String(e.rating || ""))}/5</td>
+        <td style="white-space:pre-wrap;">${e.comment ? escapeHtml(e.comment) : `<span class="muted">—</span>`}</td>
+        <td class="col-actions">
+          <div class="actions">
+            <button class="btn btn--danger" data-action="deleteEval" data-id="${e.id}">Ta bort</button>
+          </div>
+        </td>
+      </tr>
     `;
   }).join("");
 }
 
-// ---------- Forms ----------
+// Forms
 const varietyForm = $("#varietyForm");
 if(varietyForm){
   varietyForm.addEventListener("submit", async (ev) => {
@@ -249,12 +216,7 @@ if(varietyForm){
     const care = String(fd.get("care") || "").trim();
     if(!name) return toast("Skriv ett sortnamn");
 
-    await addDoc(varietiesRef(), {
-      name, type, care,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
+    await addDoc(varietiesRef, { name, type, care, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     varietyForm.reset();
     toast("Sort sparad ✅");
   });
@@ -262,13 +224,8 @@ if(varietyForm){
 
 const batchForm = $("#batchForm");
 if(batchForm){
-  // default date today
   const dateInput = batchForm.querySelector('input[name="sownDate"]');
-  if(dateInput && !dateInput.value){
-    const today = new Date();
-    const iso = today.toISOString().slice(0,10);
-    dateInput.value = iso;
-  }
+  if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
 
   batchForm.addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -277,18 +234,14 @@ if(batchForm){
     const sownDate = String(fd.get("sownDate") || "").trim();
     const sownCount = clampInt(fd.get("sownCount"), 1);
     const note = String(fd.get("note") || "").trim();
-
     if(!varietyId) return toast("Välj en sort");
     if(!sownDate) return toast("Välj datum");
 
     const v = varieties.find(x => x.id === varietyId);
     const varietyName = v?.name || "";
 
-    await addDoc(batchesRef(), {
-      varietyId,
-      varietyName,
-      sownDate,
-      sownCount,
+    await addDoc(batchesRef, {
+      varietyId, varietyName, sownDate, sownCount,
       remainingCount: sownCount,
       pottedCount: 0,
       note,
@@ -297,11 +250,7 @@ if(batchForm){
     });
 
     batchForm.reset();
-    // keep date = today
-    if(dateInput){
-      const iso = new Date().toISOString().slice(0,10);
-      dateInput.value = iso;
-    }
+    if(dateInput) dateInput.value = new Date().toISOString().slice(0,10);
     toast("Batch skapad ✅");
   });
 }
@@ -320,13 +269,8 @@ if(evalForm){
     const v = varieties.find(x => x.id === varietyId);
     const varietyName = v?.name || "";
 
-    // 1 utvärdering per sort: doc id = varietyId
     await setDoc(doc(db, "diaries", DIARY_ID, "evaluations", varietyId), {
-      varietyId,
-      varietyName,
-      rating,
-      comment,
-      updatedAt: serverTimestamp(),
+      varietyId, varietyName, rating, comment, updatedAt: serverTimestamp()
     }, { merge: true });
 
     evalForm.reset();
@@ -334,7 +278,7 @@ if(evalForm){
   });
 }
 
-// ---------- Click handlers (event delegation) ----------
+// Click actions
 document.addEventListener("click", async (ev) => {
   const btn = ev.target?.closest?.("button[data-action]");
   if(!btn) return;
@@ -398,28 +342,18 @@ document.addEventListener("click", async (ev) => {
 
         const updates = { updatedAt: serverTimestamp() };
 
-        if(action === "take"){
-          updates.remainingCount = remaining - qty;
-        }
-        if(action === "loss"){
+        if(action === "take" || action === "loss"){
           updates.remainingCount = remaining - qty;
         }
         if(action === "pot"){
-          // Omskolning: vi antar att om man omskolar så har man tagit plantor från kvar.
           updates.remainingCount = remaining - qty;
           updates.pottedCount = clampInt(data.pottedCount, 0) + qty;
         }
-
         tx.update(batchRef, updates);
 
-        // Logga event (för historik om du vill utöka senare)
+        // eventlogg (valfritt)
         const evRef = doc(collection(db, "diaries", DIARY_ID, "events"));
-        tx.set(evRef, {
-          type: action,
-          batchId: id,
-          qty,
-          at: serverTimestamp(),
-        });
+        tx.set(evRef, { type: action, batchId: id, qty, at: serverTimestamp() });
       });
 
       toast("Sparat ✅");
@@ -431,13 +365,3 @@ document.addEventListener("click", async (ev) => {
     toast(String(err?.message || "Något gick fel"));
   }
 });
-
-// ---------- Small util ----------
-function escapeHtml(str){
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}

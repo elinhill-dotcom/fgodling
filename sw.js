@@ -1,5 +1,5 @@
 // Simple offline cache
-const CACHE = "fgs-odlingsapp-v1";
+const CACHE = "fgs-odlingsapp-v3";
 const ASSETS = [
   "/",
   "/index.html",
@@ -24,11 +24,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  // Network first for Firebase CDN + API calls, cache first for app shell
   const url = new URL(req.url);
 
   if (url.origin.includes("gstatic.com") || url.origin.includes("googleapis.com")) {
-    return; // let it go to network
+    return; // network for firebase
   }
 
   event.respondWith(
