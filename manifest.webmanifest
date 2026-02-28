@@ -1,10 +1,10 @@
 {
-  "name": "Fröodlaren",
-  "short_name": "Fröodlaren",
+  "name": "FGs odlingsapp",
+  "short_name": "FGs odling",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ecfdf5",
-  "theme_color": "#047857",
+  "background_color": "#f7faf9",
+  "theme_color": "#0f766e",
   "icons": [
     {
       "src": "/icons/icon-192.png",

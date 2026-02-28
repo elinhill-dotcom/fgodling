@@ -1,31 +1,41 @@
-const CACHE_NAME = "froodlaren-v1";
+// Simple offline cache
+const CACHE = "fgs-odlingsapp-v1";
 const ASSETS = [
   "/",
   "/index.html",
-  "/manifest.webmanifest"
+  "/styles.css",
+  "/app.js",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((k) => k !== CACHE_NAME ? caches.delete(k) : null)))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys => Promise.all(keys.map(k => (k === CACHE ? null : caches.delete(k)))))
   );
+  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET") return;
+  // Network first for Firebase CDN + API calls, cache first for app shell
+  const url = new URL(req.url);
+
+  if (url.origin.includes("gstatic.com") || url.origin.includes("googleapis.com")) {
+    return; // let it go to network
+  }
+
   event.respondWith(
-    caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+    fetch(req).then((res) => {
       const copy = res.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(()=>{});
+      caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{});
       return res;
-    }).catch(() => cached))
+    }).catch(() => caches.match(req).then(r => r || caches.match("/index.html")))
   );
 });

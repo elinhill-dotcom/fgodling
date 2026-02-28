@@ -1,906 +1,194 @@
 <!doctype html>
-<html lang="sv" class="h-full">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fröodlaren</title>
-  <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#047857">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
-  <style>
-    * { font-family: 'Nunito', sans-serif; }
-    .tab-active { background: #2d5a27; color: white; }
-    .stat-card { animation: slideUp 0.4s ease-out; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .calendar-day { min-height: 80px; }
-    .calendar-task { font-size: 0.7rem; }
-    html, body, #app { height: 100%; }
-  
-    :root { --primary:#047857; --surface:#ffffff; }
-    body { -webkit-tap-highlight-color: transparent; }
-    .tab-active { background: rgba(4,120,87,0.10); color: #065f46; }
-    nav button { padding: 12px 10px; }
-    nav button span { display:block; font-size: 11px; }
-    .card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 6px 18px rgba(15,23,42,0.06); border: 1px solid rgba(16,185,129,0.12); }
-    .btn { border-radius: 12px; padding: 10px 12px; font-weight: 800; font-size: 13px; line-height: 1; border: 1px solid transparent; box-shadow: 0 2px 10px rgba(15,23,42,0.08); }
-    .btn-primary { background: linear-gradient(135deg, #059669, #047857); color: white; }
-    .btn-primary:hover { filter: brightness(0.98); }
-    .btn-secondary { background: white; border-color: rgba(59,130,246,0.25); color: #1d4ed8; }
-    .btn-secondary:hover { background: rgba(59,130,246,0.06); }
-    .btn-danger { background: #dc2626; color: white; }
-    .btn-danger:hover { filter: brightness(0.98); }
-    .input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(148,163,184,0.55); background: white; font-size: 14px; }
-    .input:focus { outline: none; border-color: rgba(16,185,129,0.8); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
-    .chip { display:inline-flex; align-items:center; gap:6px; padding: 6px 10px; border-radius: 999px; font-weight: 800; }
-    .chip-emerald { background: rgba(16,185,129,0.12); color:#065f46; }
-    .chip-blue { background: rgba(59,130,246,0.12); color:#1e40af; }
-    details > summary::-webkit-details-marker { display:none; }
-</style>
-  <style>body { box-sizing: border-box; }</style>
- </head>
- <body class="h-full bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 overflow-auto">
-  <div id="app" class="w-full h-full flex flex-col">
-   <!-- Header -->
-   <header class="bg-gradient-to-r from-emerald-700 to-green-600 text-white p-4 shadow-lg flex-shrink-0">
-    <div class="max-w-xl mx-auto">
-     <div class="flex items-center justify-between">
-       <h1 id="app-title" class="text-2xl font-extrabold flex items-center gap-2">🌱 Fröodlaren</h1>
-       <div class="flex items-center gap-2">
-        <button id="btn-login" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm font-semibold">Logga in</button>
-        <button id="btn-logout" class="hidden bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm font-semibold">Logga ut</button>
-       </div>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>FGs odlingsapp</title>
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">🌱</div>
+        <div class="brand__text">
+          <div class="brand__title">FGs odlingsapp</div>
+          <div class="brand__sub">Delad sådd- och skötseldagbok (öppen)</div>
+        </div>
       </div>
+
+      <!-- Syns bara på större skärmar -->
+      <nav class="nav" aria-label="Meny">
+        <a href="#oversikt">Översikt</a>
+        <a href="#sorter">Sorter</a>
+        <a href="#sadd">Sådd</a>
+        <a href="#batchar">Batchar</a>
+        <a href="#utvardering">Utvärdering</a>
+      </nav>
     </div>
-   </header><!-- Navigation Tabs -->
-   <nav class="bg-white/90 backdrop-blur border-t border-emerald-100 fixed bottom-0 left-0 right-0 z-20">
-    <div class="max-w-xl mx-auto flex">
-     <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">📊 Överblick</button> <button onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button> <button onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌻 Frösorter</button> <button onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📝 Registrering</button>
-    </div>
-   </nav><!-- Main Content -->
-   <main class="flex-1 max-w-xl mx-auto w-full p-4 pb-24 overflow-auto">
-    <!-- Dashboard Tab -->
-    <section id="section-dashboard" class="fade-in space-y-6">
-     <!-- Statistics Grid -->
-     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-       <div class="text-2xl font-bold text-emerald-700" id="stat-total-sown">
-        0
-       </div>
-       <div class="text-xs text-gray-600 mt-1">
-        🌱 Totalt sådda
-       </div>
-      </div>
-      <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-       <div class="text-2xl font-bold text-blue-600" id="stat-potted">
-        0
-       </div>
-       <div class="text-xs text-gray-600 mt-1">
-        🪴 Omskolande
-       </div>
-      </div>
-      <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-       <div class="text-2xl font-bold text-red-600" id="stat-lost">
-        0
-       </div>
-       <div class="text-xs text-gray-600 mt-1">
-        💀 Förlorade
-       </div>
-      </div>
-      <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-       <div class="text-2xl font-bold text-indigo-600" id="stat-varieties">
-        0
-       </div>
-       <div class="text-xs text-gray-600 mt-1">
-        🌻 Sorter
-       </div>
-      </div>
-     </div><!-- Personal Stats and Chart -->
-     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-white rounded-xl shadow p-5">
-       <h3 class="font-bold text-emerald-800 mb-4">👥 Per person</h3>
-       <div id="person-stats" class="space-y-3"></div>
-      </div>
-      <div class="bg-white rounded-xl shadow p-5">
-       <h3 class="font-bold text-emerald-800 mb-4">📊 Prestanda</h3>
-       <canvas id="successChart" class="max-h-64"></canvas>
-      </div>
-     </div><!-- Weekly Loss Statistics -->
-     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-white rounded-xl shadow p-5">
-       <h3 class="font-bold text-red-800 mb-4">📈 Förluster per vecka</h3>
-       <canvas id="weeklyLossChart" class="max-h-64"></canvas>
-      </div>
-      <div class="bg-white rounded-xl shadow p-5">
-       <h3 class="font-bold text-emerald-800 mb-4">🏆 Kategori-prestanda</h3>
-       <canvas id="categoryChart" class="max-h-64"></canvas>
-      </div>
-     </div>
-    </section><!-- Calendar Tab -->
-    <section id="section-calendar" class="hidden fade-in">
-     <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="text-lg font-bold text-emerald-800 mb-4">📅 Odlingskalender</h2>
-      <div class="flex items-center justify-between mb-6">
-       <button onclick="previousMonth()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">← Föregående</button>
-       <h3 id="calendar-month" class="text-xl font-bold text-gray-800"></h3><button onclick="nextMonth()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">Nästa →</button>
-      </div>
-      <div class="grid grid-cols-7 gap-2">
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Mån
-       </div>
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Tis
-       </div>
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Ons
-       </div>
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Tor
-       </div>
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Fre
-       </div>
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Lör
-       </div>
-       <div class="font-bold text-center text-gray-600 text-sm py-2">
-        Sön
-       </div>
-       <div id="calendar-grid" class="col-span-7 grid grid-cols-7 gap-2"></div>
-      </div>
-     </div>
-     <div class="grid md:grid-cols-2 gap-4">
-      <div class="bg-white rounded-xl shadow p-6">
-       <h3 class="text-lg font-bold text-emerald-800 mb-4">👩 Elins uppgifter (nästa 30 dagar)</h3>
-       <div id="elin-tasks" class="space-y-2"></div>
-      </div>
-      <div class="bg-white rounded-xl shadow p-6">
-       <h3 class="text-lg font-bold text-emerald-800 mb-4">👩 Louises uppgifter (nästa 30 dagar)</h3>
-       <div id="louise-tasks" class="space-y-2"></div>
-      </div>
-     </div>
-    </section><!-- Varieties Tab -->
-    <section id="section-varieties" class="hidden fade-in">
-     <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="text-lg font-bold text-emerald-800 mb-4">➕ Lägg till frösort</h2>
-      <form id="variety-form" class="space-y-4" onsubmit="handleAddVariety(event)">
-       <div class="grid md:grid-cols-2 gap-4">
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Namn på svenska</label> <input type="text" id="variety-name" placeholder="t.ex. Gul blomsterärt" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
+  </header>
+
+  <main class="container">
+    <section id="oversikt" class="card">
+      <h2>Översikt</h2>
+      <p class="muted">Allt sparas direkt i Firebase Firestore. Ingen inloggning behövs.</p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat__label">Sorter</div>
+          <div class="stat__value" id="statVarieties">0</div>
         </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Engelskt namn</label> <input type="text" id="variety-english-name" placeholder="t.ex. Annual Phlox" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+        <div class="stat">
+          <div class="stat__label">Batchar</div>
+          <div class="stat__value" id="statBatches">0</div>
         </div>
-       </div>
-       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Kategori</label> <select id="variety-category" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required> <option value="">Välj kategori</option> <option value="Blomma">🌸 Blomma</option> <option value="Tomat">🍅 Tomat</option> <option value="Paprika/Chili">🫑 Paprika/Chili</option> <option value="Grönsak">🥬 Grönsak</option> <option value="Lök">🧅 Lök</option> </select>
-       </div>
-       <div class="grid md:grid-cols-3 gap-4">
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Årighet</label> <input type="text" id="variety-perennial" placeholder="t.ex. Ettårig" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+        <div class="stat">
+          <div class="stat__label">Sådda</div>
+          <div class="stat__value" id="statSown">0</div>
         </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Höjd</label> <input type="text" id="variety-height" placeholder="t.ex. 45 cm" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+        <div class="stat">
+          <div class="stat__label">Kvar</div>
+          <div class="stat__value" id="statRemaining">0</div>
         </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Färg</label> <input type="text" id="variety-color" placeholder="t.ex. Gul" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+      </div>
+
+      <details class="details">
+        <summary>Inställningar</summary>
+        <div class="row">
+          <label class="field">
+            <span>Dagbok-ID (dela med din syster genom att ha samma)</span>
+            <input id="diaryIdInput" type="text" placeholder="t.ex. fgs-2026" />
+          </label>
+          <button class="btn" id="saveDiaryBtn">Spara</button>
         </div>
-       </div>
-       <div class="grid md:grid-cols-3 gap-4">
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Såtid</label> <input type="text" id="variety-sow-time" placeholder="t.ex. mars-april" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
-        </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Grottid (dagar)</label> <input type="text" id="variety-germination" placeholder="t.ex. 5-15" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
-        </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Växläge</label> <input type="text" id="variety-location" placeholder="t.ex. sol-halvskugga" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
-        </div>
-       </div>
-       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Blomtid/Skördetid</label> <input type="text" id="variety-bloom-time" placeholder="t.ex. juli-september" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
-       </div>
-       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Anteckningar (Impecta/Florea)</label> <textarea id="variety-notes" rows="2" placeholder="Länk eller info..." class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none"></textarea>
-       </div><button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md">✚ Lägg till frösort</button>
-      </form>
-     </div>
-     <h3 class="text-lg font-bold text-emerald-800 mb-4">🌻 Mina frösorter</h3>
-     <div id="varieties-list" class="grid gap-4 md:grid-cols-2"></div>
-    </section><!-- Registration Tab -->
-    <section id="section-register" class="hidden fade-in space-y-6">
-     <!-- Sow Seeds -->
-     <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-bold text-emerald-800 mb-4">🌱 Registrera sådd</h2>
-      <form id="sow-form" class="space-y-4" onsubmit="handleSowForm(event)">
-       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Frösort</label> <select id="sow-variety" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required></select>
-       </div>
-       <div class="grid md:grid-cols-3 gap-4">
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Antal frön</label> <input type="number" id="sow-count" min="1" value="1" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
-        </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Sådatum</label> <input type="date" id="sow-date" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
-        </div>
-        <div>
-         <label class="block text-sm font-semibold text-gray-700 mb-1">Sått av</label> <select id="sow-by" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required> <option value="">Välj</option> <option value="Elin">Elin</option> <option value="Louise">Louise</option> </select>
-        </div>
-       </div><button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md">🌱 Registrera sådd</button>
-      </form>
-     </div><!-- Pot Seedlings -->
-     <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-bold text-blue-800 mb-4">🧺 Aktiva sådder (batchar)</h2>
-      <div id="sown-list" class="space-y-3"></div>
-     </div><!-- Loss History -->
-     <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-bold text-red-800 mb-4">📋 Förlusthistorik</h2>
-      <div id="loss-history" class="space-y-3"></div>
-     </div>
+        <p class="muted tiny">
+          Tips: sätt t.ex. <code>fgs-2026</code>. Alla med länken kan då se och skriva (öppen dagbok).
+        </p>
+      </details>
     </section>
-   </main>
-  </div>
-  <script type="module">
-    // Firebase + Firestore (CDN modules)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import { getFirestore, collection, addDoc, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, runTransaction, updateDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // ✅ Din Firebase-konfig
-    const firebaseConfig = {
-      apiKey: "AIzaSyDGx3Opxm3L-ag9p2iOr7o_PACg5ADdLNc",
-      authDomain: "fgsodling.firebaseapp.com",
-      projectId: "fgsodling",
-      storageBucket: "fgsodling.firebasestorage.app",
-      messagingSenderId: "394050884172",
-      appId: "1:394050884172:web:1009a738b1758606bc9ae9"
-    };
+    <section id="sorter" class="card">
+      <div class="card__head">
+        <h2>Sorter</h2>
+        <p class="muted">Lägg till frösorter ni odlar.</p>
+      </div>
 
-    // 🧺 Välj ett delat “dagbok-id” (ni båda använder samma för att dela)
-    // Ändra gärna till något hemligare/unikare.
-    const DIARY_ID = "fgsodling-2026";
+      <form id="varietyForm" class="form">
+        <div class="grid2">
+          <label class="field">
+            <span>Sortnamn</span>
+            <input name="name" required placeholder="t.ex. Tomat Moneymaker" />
+          </label>
+          <label class="field">
+            <span>Typ</span>
+            <input name="type" placeholder="t.ex. tomat, chili, blomma…" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Skötsel (valfritt)</span>
+          <textarea name="care" rows="3" placeholder="Sådjup, temperatur, omplantering, avstånd, gödsel…"></textarea>
+        </label>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+        <div class="row">
+          <button class="btn btn--primary" type="submit">+ Lägg till sort</button>
+          <span class="muted tiny" id="varietyHint"></span>
+        </div>
+      </form>
 
-    // ===== Auth UI =====
-    const loginBtn = document.getElementById("btn-login");
-    const logoutBtn = document.getElementById("btn-logout");
+      <div id="varietyList" class="list"></div>
+    </section>
 
-    loginBtn?.addEventListener("click", async () => {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    });
+    <section id="sadd" class="card">
+      <div class="card__head">
+        <h2>Registrera sådd</h2>
+        <p class="muted">Varje sådd blir en egen <strong>batch</strong> (sådd-omgång).</p>
+      </div>
 
-    logoutBtn?.addEventListener("click", async () => {
-      await signOut(auth);
-    });
+      <form id="batchForm" class="form">
+        <div class="grid2">
+          <label class="field">
+            <span>Sort</span>
+            <select name="varietyId" id="varietySelect" required>
+              <option value="">Välj sort…</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Datum sådd</span>
+            <input name="sownDate" type="date" required />
+          </label>
+        </div>
 
-    function setAuthButtons(user) {
-      if (!loginBtn || !logoutBtn) return;
-      if (user) {
-        loginBtn.classList.add("hidden");
-        logoutBtn.classList.remove("hidden");
-      } else {
-        loginBtn.classList.remove("hidden");
-        logoutBtn.classList.add("hidden");
-      }
-    }
+        <div class="grid2">
+          <label class="field">
+            <span>Antal sådda</span>
+            <input name="sownCount" type="number" min="1" step="1" required placeholder="t.ex. 12" />
+          </label>
+          <label class="field">
+            <span>Anteckning (valfritt)</span>
+            <input name="note" placeholder="t.ex. värmematta, plastlock…" />
+          </label>
+        </div>
 
-    // ===== Firestore “dataSdk”-shim (för att din befintliga kod ska fortsätta funka) =====
-    // Vi lagrar allt i collection: diaries/{DIARY_ID}/records
-    const recordsCol = collection(db, "diaries", DIARY_ID, "records");
+        <button class="btn btn--primary" type="submit">+ Skapa batch</button>
+      </form>
+    </section>
 
-    function ensureRecordShape(obj) {
-      // Lägg på tidsstämplar och städa lite
-      return { ...obj, updated_at: serverTimestamp() };
-    }
+    <section id="batchar" class="card">
+      <div class="card__head">
+        <h2>Batchar</h2>
+        <p class="muted">Här minskar du “kvar” när någon tar/bytar plantor eller om något dör.</p>
+      </div>
 
-    window.dataSdk = {
-      init: async (handler) => {
-        // Lyssna på alla records i realtid
-        // (ingen orderBy för att undvika index-krav)
-        onSnapshot(query(recordsCol), (snap) => {
-          const data = snap.docs.map(d => ({ __backendId: d.id, ...d.data() }));
-          handler?.onDataChanged?.(data);
-        });
-        return { isOk: true };
-      },
-      create: async (obj) => {
-        await addDoc(recordsCol, ensureRecordShape({ ...obj, created_at: serverTimestamp() }));
-        return { isOk: true };
-      },
-      update: async (obj) => {
-        if (!obj?.__backendId) throw new Error("update kräver __backendId");
-        const ref = doc(db, "diaries", DIARY_ID, "records", obj.__backendId);
-        const copy = { ...obj };
-        delete copy.__backendId;
-        await setDoc(ref, ensureRecordShape(copy), { merge: true });
-        return { isOk: true };
-      },
-      delete: async (obj) => {
-        if (!obj?.__backendId) throw new Error("delete kräver __backendId");
-        const ref = doc(db, "diaries", DIARY_ID, "records", obj.__backendId);
-        await deleteDoc(ref);
-        return { isOk: true };
-      }
-    };
+      <div id="batchList" class="list"></div>
+    </section>
 
-    // Init + auth guard: vi låter appen visa data först när man är inloggad (så att den är privat).
-    async function initFirebaseAndData() {
-      onAuthStateChanged(auth, async (user) => {
-        setAuthButtons(user);
-        if (!user) {
-          // Tomma listor tills inloggad
-          allData = [];
-          updateUI();
-          return;
-        }
-        // Starta realtime-lyssning
-        const result = await window.dataSdk.init({ onDataChanged: (data) => { allData = data; updateUI(); } });
-        if (!result.isOk) console.error("Data init failed");
-      });
-    }
+    <section id="utvardering" class="card">
+      <div class="card__head">
+        <h2>Utvärdering</h2>
+        <p class="muted">Spara lärdomar till nästa år (per sort).</p>
+      </div>
 
-    // PWA service worker
+      <form id="evalForm" class="form">
+        <div class="grid2">
+          <label class="field">
+            <span>Sort</span>
+            <select name="varietyId" id="evalSelect" required>
+              <option value="">Välj sort…</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Betyg (1–5)</span>
+            <input name="rating" type="number" min="1" max="5" step="1" required />
+          </label>
+        </div>
+        <label class="field">
+          <span>Kommentar</span>
+          <textarea name="comment" rows="3" placeholder="Vad funkade? Vad ska ni göra annorlunda?"></textarea>
+        </label>
+        <button class="btn btn--primary" type="submit">Spara utvärdering</button>
+      </form>
+
+      <div id="evalList" class="list"></div>
+    </section>
+
+    <footer class="footer muted tiny">
+      <div>
+        <strong>Tips:</strong> Om något inte syns direkt — uppdatera sidan. Firestore synkar live när den är igång.
+      </div>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
+  <script>
+    // PWA
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+      window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
     }
-
-    let allData = [];
-    let allVarieties = [];
-    let currentTab = 'dashboard';
-    let currentMonth = new Date();
-    let successChart = null;
-    let categoryChart = null;
-    let weeklyLossChart = null;
-async function init() {
-      await initFirebaseAndData();
-      document.getElementById('sow-date').valueAsDate = new Date();
-    }
-
-document.getElementById('sow-date').valueAsDate = new Date();
-    }
-
-    function showTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('section[id^="section-"]').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('button[id^="tab-"]').forEach(el => el.classList.remove('tab-active', 'text-white'));
-      
-      document.getElementById(`section-${tab}`).classList.remove('hidden');
-      document.getElementById(`tab-${tab}`).classList.add('tab-active', 'text-white');
-      
-      updateUI();
-    }
-
-    function updateUI() {
-      updateDashboard();
-      if (currentTab === 'calendar') updateCalendar();
-      if (currentTab === 'varieties') updateVarieties();
-      if (currentTab === 'register') updateRegister();
-    }
-
-    function updateDashboard() {
-      const batches = allData.filter(d => d.record_type === 'batch');
-      const losses = allData.filter(d => d.record_type === 'loss');
-      const transfers = allData.filter(d => d.record_type === 'transfer');
-
-      const totalSown = batches.reduce((sum, d) => sum + (d.sown_count || 0), 0);
-      const totalPotted = batches.reduce((sum, d) => sum + (d.potted_count || 0), 0);
-      const totalLost = losses.reduce((sum, d) => sum + (d.lost_count || 0), 0);
-      const totalTransferred = transfers.reduce((sum, d) => sum + (d.transfer_count || 0), 0);
-      const uniqueVarieties = new Set(batches.map(d => d.variety_id)).size;
-
-      document.getElementById('stat-total-sown').textContent = totalSown;
-      document.getElementById('stat-potted').textContent = totalPotted;
-      document.getElementById('stat-lost').textContent = totalLost;
-      document.getElementById('stat-varieties').textContent = uniqueVarieties;
-      const tEl = document.getElementById('stat-transferred');
-      if (tEl) tEl.textContent = totalTransferred;
-
-      updatePersonStats(batches, losses);
-      updateCharts(batches, losses, transfers);
-    }
-
-    function updatePersonStats(batches, losses) {
-      const elinSown = batches.filter(d => d.sown_by && d.sown_by.includes('Elin')).reduce((s, d) => s + (d.sown_count || 0), 0);
-      const louiseSown = batches.filter(d => d.sown_by && d.sown_by.includes('Louise')).reduce((s, d) => s + (d.sown_count || 0), 0);
-      const elinLost = losses.filter(d => d.lost_by === 'Elin').reduce((s, d) => s + (d.lost_count || 0), 0);
-      const louiseLost = losses.filter(d => d.lost_by === 'Louise').reduce((s, d) => s + (d.lost_count || 0), 0);
-
-      const elinSuccess = elinSown > 0 ? Math.round(((elinSown - elinLost) / elinSown) * 100) : 0;
-      const louiseSuccess = louiseSown > 0 ? Math.round(((louiseSown - louiseLost) / louiseSown) * 100) : 0;
-
-      document.getElementById('person-stats').innerHTML = `
-        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-         <div>
-          <p class="font-semibold text-blue-900">👩 Elin</p>
-          <p class="text-sm text-blue-600">${elinSown} sådda • ${elinLost} förlorade</p>
-         </div>
-         <div class="text-2xl font-bold text-blue-600">${elinSuccess}%</div>
-        </div>
-        <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-         <div>
-          <p class="font-semibold text-purple-900">👩 Louise</p>
-          <p class="text-sm text-purple-600">${louiseSown} sådda • ${louiseLost} förlorade</p>
-         </div>
-         <div class="text-2xl font-bold text-purple-600">${louiseSuccess}%</div>
-        </div>
-      `;
-    }
-
-    function updateCharts(batches, losses, transfers) {
-      // Success chart
-      const elinSown = batches.filter(d => d.sown_by && d.sown_by.includes('Elin')).reduce((s, d) => s + (d.sown_count || 0), 0);
-      const louiseSown = batches.filter(d => d.sown_by && d.sown_by.includes('Louise')).reduce((s, d) => s + (d.sown_count || 0), 0);
-      const elinLost = losses.filter(d => d.lost_by === 'Elin').reduce((s, d) => s + (d.lost_count || 0), 0);
-      const louiseLost = losses.filter(d => d.lost_by === 'Louise').reduce((s, d) => s + (d.lost_count || 0), 0);
-
-      const successCtx = document.getElementById('successChart').getContext('2d');
-      if (successChart) successChart.destroy();
-      successChart = new Chart(successCtx, {
-        type: 'bar',
-        data: {
-          labels: ['Elin', 'Louise'],
-          datasets: [
-            { label: 'Överlevde', data: [Math.max(elinSown - elinLost, 0), Math.max(louiseSown - louiseLost, 0)], backgroundColor: '#10b981' },
-            { label: 'Förlorade', data: [elinLost, louiseLost], backgroundColor: '#ef4444' }
-          ]
-        },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
-      });
-
-      // Weekly loss chart
-      const weeklyCtx = document.getElementById('lossChart').getContext('2d');
-      if (lossChart) lossChart.destroy();
-
-      const weeks = {};
-      losses.forEach(l => {
-        const d = new Date(l.loss_date);
-        const key = d.getFullYear() + '-W' + getWeekNumber(d);
-        weeks[key] = (weeks[key] || 0) + (l.lost_count || 0);
-      });
-
-      const sortedKeys = Object.keys(weeks).sort();
-      const weekLabels = sortedKeys.map(k => k);
-      const weekValues = sortedKeys.map(k => weeks[k]);
-
-      lossChart = new Chart(weeklyCtx, {
-        type: 'line',
-        data: { labels: weekLabels, datasets: [{ label: 'Förlorade per vecka', data: weekValues, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.15)', fill: true, tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
-      });
-    }
-
-    function updateVarieties() {
-      const varieties = allData.filter(d => d.record_type === 'variety');
-      allVarieties = varieties;
-
-      const select = document.getElementById('sow-variety');
-      select.innerHTML = '<option value="">Välj frösort</option>' + 
-        varieties.map(v => `<option value="${v.variety_id}">${v.variety_name}</option>`).join('');
-
-      document.getElementById('varieties-list').innerHTML = varieties.map(v => `
-        <div class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl shadow p-5 border-l-4 border-emerald-600">
-         <h3 class="text-lg font-bold text-emerald-900">${v.variety_name}</h3>
-         <p class="text-sm text-gray-600 italic">${v.english_name || ''}</p>
-         <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
-          <p><span class="font-semibold">📂</span> ${v.category}</p>
-          <p><span class="font-semibold">📏</span> ${v.height}</p>
-          <p><span class="font-semibold">🌈</span> ${v.color}</p>
-          <p><span class="font-semibold">📅</span> ${v.sow_time}</p>
-         </div>
-         ${v.notes ? `<p class="mt-3 text-xs text-emerald-700 bg-white p-2 rounded">📝 ${v.notes}</p>` : ''}
-         <button onclick="deleteVariety('${v.variety_id}')" class="mt-3 w-full text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg font-semibold transition-all">🗑️ Ta bort</button>
-        </div>
-      `).join('');
-    }
-
-    function updateRegister() {
-      const batches = allData.filter(d => d.record_type === 'batch')
-        .sort((a, b) => new Date(b.sown_date) - new Date(a.sown_date));
-      const losses = allData.filter(d => d.record_type === 'loss')
-        .sort((a, b) => new Date(b.loss_date) - new Date(a.loss_date));
-      const transfers = allData.filter(d => d.record_type === 'transfer')
-        .sort((a, b) => new Date(b.transfer_date) - new Date(a.transfer_date));
-
-      // Aktiva batchar (sådder)
-      const sownList = document.getElementById('sown-list');
-      if (sownList) {
-        sownList.innerHTML = batches.length === 0 ? '<p class="text-gray-500">Inga sådder registrerade ännu.</p>' :
-          batches.map(b => {
-            const remaining = (b.remaining_count ?? b.sown_count ?? 0);
-            const potted = (b.potted_count ?? 0);
-            return `
-            <div class="card">
-              <div class="flex justify-between items-start gap-3">
-                <div class="min-w-0">
-                  <p class="font-extrabold text-gray-900 truncate">${b.variety_name}</p>
-                  <p class="text-sm text-gray-600">${b.sown_count} frön • ${new Date(b.sown_date).toLocaleDateString('sv-SE')} • Sått av: ${b.sown_by}</p>
-                  <div class="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span class="chip chip-emerald">Kvar: ${remaining}</span>
-                    <span class="chip chip-blue">Omskolade: ${potted}</span>
-                  </div>
-                </div>
-                <div class="flex flex-col gap-2 flex-shrink-0">
-                  <button onclick="registerPotting('${b.__backendId}')" class="btn btn-secondary">🪴 Omskola</button>
-                  <button onclick="registerTransfer('${b.__backendId}')" class="btn btn-primary">🤝 Ta plantor</button>
-                </div>
-              </div>
-
-              <details class="mt-3">
-                <summary class="text-sm font-semibold text-gray-700 cursor-pointer select-none">💀 Registrera förlust</summary>
-                <div class="mt-3 grid grid-cols-3 gap-2">
-                  <div>
-                    <label class="text-xs font-semibold text-gray-600">Antal</label>
-                    <input type="number" id="loss-count-${b.__backendId}" min="0" max="${remaining}" value="0" class="input">
-                  </div>
-                  <div>
-                    <label class="text-xs font-semibold text-gray-600">Datum</label>
-                    <input type="date" id="loss-date-${b.__backendId}" class="input" value="${new Date().toISOString().split('T')[0]}">
-                  </div>
-                  <div>
-                    <label class="text-xs font-semibold text-gray-600">Läge</label>
-                    <select id="loss-stage-${b.__backendId}" class="input">
-                      <option value="">Välj</option>
-                      <option value="Grodd">Grodd</option>
-                      <option value="Spirad">Spirad</option>
-                      <option value="Blad">Blad</option>
-                      <option value="Omskold">Omskold</option>
-                      <option value="Växande">Växande</option>
-                    </select>
-                  </div>
-                </div>
-                <button onclick="registerLoss('${b.__backendId}', '${b.sown_by}')" class="btn btn-danger w-full mt-3">💀 Spara förlust</button>
-              </details>
-            </div>`;
-          }).join('');
-      }
-
-      // Historik: förluster
-      const lossHistory = document.getElementById('loss-history');
-      if (lossHistory) {
-        lossHistory.innerHTML = losses.length === 0 ? '<p class="text-gray-500">Inga förluster registrerade</p>' :
-          losses.map(l => `
-            <div class="bg-red-50 rounded-lg p-4 border-l-4 border-red-600">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-bold text-red-900">${l.variety_name}</p>
-                  <p class="text-sm text-red-700">${l.lost_count} st • ${new Date(l.loss_date).toLocaleDateString('sv-SE')} • ${l.lost_stage || ''} • ${l.lost_by || ''}</p>
-                </div>
-                <button onclick="deleteLoss('${l.__backendId}')" class="text-xs bg-red-200 hover:bg-red-300 text-red-800 px-3 py-1 rounded transition-all">🗑️</button>
-              </div>
-            </div>
-          `).join('');
-      }
-
-      // Historik: byten/uttag
-      const transferHistory = document.getElementById('transfer-history');
-      if (transferHistory) {
-        transferHistory.innerHTML = transfers.length === 0 ? '<p class="text-gray-500">Inga byten registrerade</p>' :
-          transfers.map(t => `
-            <div class="bg-amber-50 rounded-lg p-4 border-l-4 border-amber-500">
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-bold text-amber-900">${t.variety_name}</p>
-                  <p class="text-sm text-amber-800">${t.transfer_count} st • ${new Date(t.transfer_date).toLocaleDateString('sv-SE')} • ${t.transfer_by || ''} ${t.note ? '• ' + t.note : ''}</p>
-                </div>
-                <button onclick="deleteTransfer('${t.__backendId}')" class="text-xs bg-amber-200 hover:bg-amber-300 text-amber-900 px-3 py-1 rounded transition-all">🗑️</button>
-              </div>
-            </div>
-          `).join('');
-      }
-    }
-
-    function updateCalendar() {
-      const year = currentMonth.getFullYear();
-      const month = currentMonth.getMonth();
-      
-      document.getElementById('calendar-month').textContent = currentMonth.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' });
-
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const daysInMonth = lastDay.getDate();
-      const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-
-      let html = '';
-      for (let i = 0; i < startingDayOfWeek; i++) html += '<div class="bg-gray-50"></div>';
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const isToday = new Date().toDateString() === date.toDateString();
-        
-        html += `
-          <div class="bg-white rounded-lg p-2 calendar-day border-2 ${isToday ? 'border-emerald-600 bg-emerald-50' : 'border-gray-200'}">
-           <div class="font-bold text-sm ${isToday ? 'text-emerald-700' : 'text-gray-600'}">${day}</div>
-          </div>
-        `;
-      }
-
-      document.getElementById('calendar-grid').innerHTML = html;
-
-      const elinTasks = getTasks('Elin', 30);
-      const louiseTasks = getTasks('Louise', 30);
-
-      document.getElementById('elin-tasks').innerHTML = elinTasks.length === 0 ? '<p class="text-gray-500">Inga uppgifter</p>' :
-        elinTasks.map(t => `<div class="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-600"><p class="font-semibold text-blue-900">${t.date}</p><p class="text-sm text-blue-700">${t.text}</p></div>`).join('');
-
-      document.getElementById('louise-tasks').innerHTML = louiseTasks.length === 0 ? '<p class="text-gray-500">Inga uppgifter</p>' :
-        louiseTasks.map(t => `<div class="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-600"><p class="font-semibold text-purple-900">${t.date}</p><p class="text-sm text-purple-700">${t.text}</p></div>`).join('');
-    }
-
-    function getTasks(person, days) {
-      const tasks = [];
-      const today = new Date();
-      const sown = allData.filter(d => d.record_type === 'batch' && (d.sown_by === person || d.sown_by === 'Båda'));
-      
-      sown.forEach(s => {
-        if (s.sown_date) {
-          const sowDate = new Date(s.sown_date);
-          const daysAgo = Math.floor((today - sowDate) / (1000 * 60 * 60 * 24));
-          const pottingDay = 14;
-          
-          if (daysAgo <= pottingDay && daysAgo + 30 >= pottingDay) {
-            const pottingDate = new Date(sowDate);
-            pottingDate.setDate(pottingDate.getDate() + pottingDay);
-            const daysLeft = Math.floor((pottingDate - today) / (1000 * 60 * 60 * 24));
-            
-            if (daysLeft >= 0 && daysLeft <= 30) {
-              tasks.push({
-                date: pottingDate.toLocaleDateString('sv-SE'),
-                text: `🪴 Omskola ${s.variety_name} (${daysLeft === 0 ? 'IDAG!' : 'om ' + daysLeft + 'd'})`
-              });
-            }
-          }
-        }
-      });
-      return tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
-    }
-
-    function previousMonth() {
-      currentMonth.setMonth(currentMonth.getMonth() - 1);
-      updateCalendar();
-    }
-
-    function nextMonth() {
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
-      updateCalendar();
-    }
-
-    async function handleAddVariety(e) {
-      e.preventDefault();
-      const id = 'variety_' + Date.now();
-      
-      const result = await window.dataSdk.create({
-        record_type: 'variety',
-        variety_id: id,
-        variety_name: document.getElementById('variety-name').value,
-        english_name: document.getElementById('variety-english-name').value,
-        category: document.getElementById('variety-category').value,
-        perennial: document.getElementById('variety-perennial').value,
-        bloom_time: document.getElementById('variety-bloom-time').value,
-        location: document.getElementById('variety-location').value,
-        germination_days: document.getElementById('variety-germination').value,
-        sow_time: document.getElementById('variety-sow-time').value,
-        height: document.getElementById('variety-height').value,
-        color: document.getElementById('variety-color').value,
-        notes: document.getElementById('variety-notes').value,
-        sown_date: '',
-        sown_count: 0,
-        sown_by: '',
-        potted_date: '',
-        potted_count: 0,
-        potted_by: '',
-        loss_date: '',
-        lost_stage: '',
-        lost_count: 0,
-        lost_by: ''
-      });
-
-      if (result.isOk) document.getElementById('variety-form').reset();
-    }
-
-    async function handleSowForm(e) {
-      e.preventDefault();
-
-      const varietySel = document.getElementById('sow-variety');
-      const varietyId = varietySel.value;
-      const varietyName = varietySel.options[varietySel.selectedIndex].text;
-
-      const sownCount = parseInt(document.getElementById('sow-count').value, 10);
-      const sownDate = document.getElementById('sow-date').value;
-      const sownBy = document.getElementById('sow-by').value;
-
-      const result = await window.dataSdk.create({
-        record_type: 'batch',
-        batch_id: 'batch_' + Date.now(),
-        variety_id: varietyId,
-        variety_name: varietyName,
-        sown_date: sownDate + 'T00:00:00Z',
-        sown_count: sownCount,
-        remaining_count: sownCount,
-        potted_count: 0,
-        sown_by: sownBy
-      });
-
-      if (result.isOk) {
-        document.getElementById('sow-form').reset();
-        document.getElementById('sow-date').valueAsDate = new Date();
-      }
-    }
-
-    async function deleteVariety(id) {
-      const record = allData.find(d => d.record_type === 'variety' && d.variety_id === id);
-      if (record) await window.dataSdk.delete(record);
-    }
-
-    async function registerPotting(batchBackendId) {
-      const batch = allData.find(d => d.__backendId === batchBackendId);
-      if (!batch) return;
-
-      const remaining = Number(batch.remaining_count ?? batch.sown_count ?? 0);
-      if (remaining <= 0) {
-        alert('Inga kvar att omskola i denna sådd.');
-        return;
-      }
-
-      const countStr = prompt(`Hur många omskolade du nu? (Kvar: ${remaining})`, String(remaining));
-      if (countStr === null) return;
-      const count = parseInt(countStr, 10);
-      if (!Number.isFinite(count) || count <= 0) return alert('Ange ett antal > 0');
-      if (count > remaining) return alert('Du kan inte omskola fler än som är kvar.');
-
-      const by = prompt('Vem omskolade? (t.ex. Elin/Louise)', batch.sown_by || '') || batch.sown_by || '';
-      const date = new Date().toISOString();
-
-      const batchRef = doc(db, "diaries", DIARY_ID, "records", batchBackendId);
-
-      await runTransaction(db, async (tx) => {
-        const snap = await tx.get(batchRef);
-        if (!snap.exists()) throw new Error('Batch saknas');
-        const data = snap.data();
-        const rem = Number(data.remaining_count ?? data.sown_count ?? 0);
-        if (count > rem) throw new Error('För få kvar');
-        tx.update(batchRef, {
-          potted_count: Number(data.potted_count ?? 0) + count
-        });
-        // logga event
-        const evRef = doc(collection(db, "diaries", DIARY_ID, "records"));
-        tx.set(evRef, {
-          record_type: 'potting',
-          variety_id: data.variety_id,
-          variety_name: data.variety_name,
-          batch_backend_id: batchBackendId,
-          potted_count: count,
-          potted_by: by,
-          potted_date: date,
-          created_at: serverTimestamp()
-        });
-      });
-    }
-
-    async function registerLoss(batchBackendId, defaultBy) {
-      const count = parseInt(document.getElementById(`loss-count-${batchBackendId}`).value || 0, 10);
-      const dateVal = document.getElementById(`loss-date-${batchBackendId}`).value;
-      const stage = document.getElementById(`loss-stage-${batchBackendId}`).value;
-
-      if (!count || count <= 0) {
-        alert('Ange antal som gått förlorade');
-        return;
-      }
-
-      const batch = allData.find(d => d.__backendId === batchBackendId);
-      if (!batch) return;
-
-      const by = prompt('Vem registrerar förlusten? (t.ex. Elin/Louise)', defaultBy || batch.sown_by || '') || (defaultBy || batch.sown_by || '');
-
-      const batchRef = doc(db, "diaries", DIARY_ID, "records", batchBackendId);
-
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(batchRef);
-          if (!snap.exists()) throw new Error('Batch saknas');
-          const data = snap.data();
-          const rem = Number(data.remaining_count ?? data.sown_count ?? 0);
-          if (count > rem) throw new Error('Inte så många kvar i batchen');
-
-          tx.update(batchRef, { remaining_count: rem - count });
-
-          const lossRef = doc(collection(db, "diaries", DIARY_ID, "records"));
-          tx.set(lossRef, {
-            record_type: 'loss',
-            variety_id: data.variety_id,
-            variety_name: data.variety_name,
-            batch_backend_id: batchBackendId,
-            loss_date: dateVal + 'T00:00:00Z',
-            lost_stage: stage,
-            lost_count: count,
-            lost_by: by,
-            created_at: serverTimestamp()
-          });
-        });
-
-        document.getElementById(`loss-count-${batchBackendId}`).value = '0';
-        document.getElementById(`loss-stage-${batchBackendId}`).value = '';
-      } catch (err) {
-        alert(err.message || 'Kunde inte registrera förlust');
-      }
-    }
-
-    async function deleteLoss(id) {
-      const record = allData.find(d => d.__backendId === id);
-      if (record) await window.dataSdk.delete(record);
-    }
-
-    
-    async function registerTransfer(batchBackendId) {
-      const batch = allData.find(d => d.__backendId === batchBackendId);
-      if (!batch) return;
-
-      const remaining = Number(batch.remaining_count ?? batch.sown_count ?? 0);
-      if (remaining <= 0) {
-        alert('Inga kvar att ta från denna sådd.');
-        return;
-      }
-
-      const qtyStr = prompt(`Hur många plantor tog du/bytte bort? (Kvar: ${remaining})`, '1');
-      if (qtyStr === null) return;
-      const qty = parseInt(qtyStr, 10);
-      if (!Number.isFinite(qty) || qty <= 0) return alert('Ange ett antal > 0');
-      if (qty > remaining) return alert('Du kan inte ta fler än som är kvar.');
-
-      const by = prompt('Vem tog/bytte? (t.ex. Elin/Louise)', '') || '';
-      const note = prompt('Anteckning (valfritt) – t.ex. "Gav till syster"', '') || '';
-      const dateVal = new Date().toISOString().split('T')[0];
-
-      const batchRef = doc(db, "diaries", DIARY_ID, "records", batchBackendId);
-
-      try {
-        await runTransaction(db, async (tx) => {
-          const snap = await tx.get(batchRef);
-          if (!snap.exists()) throw new Error('Batch saknas');
-          const data = snap.data();
-          const rem = Number(data.remaining_count ?? data.sown_count ?? 0);
-          if (qty > rem) throw new Error('Inte så många kvar i batchen');
-
-          tx.update(batchRef, { remaining_count: rem - qty });
-
-          const tRef = doc(collection(db, "diaries", DIARY_ID, "records"));
-          tx.set(tRef, {
-            record_type: 'transfer',
-            variety_id: data.variety_id,
-            variety_name: data.variety_name,
-            batch_backend_id: batchBackendId,
-            transfer_date: dateVal + 'T00:00:00Z',
-            transfer_count: qty,
-            transfer_by: by,
-            note,
-            created_at: serverTimestamp()
-          });
-        });
-      } catch (err) {
-        alert(err.message || 'Kunde inte registrera byte');
-      }
-    }
-
-    async function deleteTransfer(id) {
-      const record = allData.find(d => d.__backendId === id);
-      if (record) await window.dataSdk.delete(record);
-    }
-
-
-    init();
   </script>
- </body>
-</html
-     <!-- Transfer History -->
-     <div class="bg-white rounded-xl shadow p-6">
-      <h2 class="text-lg font-bold text-emerald-800 mb-4">🤝 Byten / uttag</h2>
-      <div id="transfer-history" class="space-y-3"></div>
-     </div>
->
+</body>
+</html>
