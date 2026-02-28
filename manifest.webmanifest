@@ -3,7 +3,7 @@
   "short_name": "FGs odling",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0fdf4",
+  "background_color": "#ecfdf5",
   "theme_color": "#047857",
   "icons": [
     {

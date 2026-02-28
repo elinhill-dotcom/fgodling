@@ -1,11 +1,8 @@
-# FGs odlingsapp (tabeller, grön)
+# FGs odlingsapp (Canva-stil + Firebase)
 
-Mobil: scroll. Desktop: meny överst.
+Detta är din Canva-design, men med Firebase Firestore istället för Canva dataSdk.
 
-## Firebase
-Appen sparar i Firestore utan inloggning.
-
-### Firestore Rules (helt öppet)
+## Viktigt: Firestore Rules (öppen, utan inloggning)
 Firestore → Rules:
 ```
 rules_version = '2';
@@ -18,11 +15,10 @@ service cloud.firestore {
 }
 ```
 
-## Repo
-Ladda upp allt i repo-root:
-- index.html
-- styles.css
-- app.js
-- sw.js
-- manifest.webmanifest
-- icons/
+## Var sparas datan?
+`diaries/fgs-elin-louise/records`
+
+## Deploy
+- Lägg filerna i repo-root på GitHub
+- Deploya på Vercel (Framework: Other)
+

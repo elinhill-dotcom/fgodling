@@ -1,17 +1,15 @@
-// Simple offline cache
-const CACHE = "fgs-odlingsapp-v3";
+const CACHE = "fgs-odlingsapp-canva-style-v1";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css",
   "/app.js",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -23,18 +21,13 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  if (url.origin.includes("gstatic.com") || url.origin.includes("googleapis.com")) {
-    return; // network for firebase
-  }
-
+  const url = new URL(event.request.url);
+  if (url.origin.includes("gstatic.com") || url.origin.includes("googleapis.com")) return;
   event.respondWith(
-    fetch(req).then((res) => {
+    fetch(event.request).then(res => {
       const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(req, copy)).catch(()=>{});
+      caches.open(CACHE).then(c => c.put(event.request, copy)).catch(()=>{});
       return res;
-    }).catch(() => caches.match(req).then(r => r || caches.match("/index.html")))
+    }).catch(() => caches.match(event.request).then(r => r || caches.match("/index.html")))
   );
 });

@@ -1,224 +1,262 @@
 <!doctype html>
-<html lang="sv">
+<html lang="sv" class="h-full">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>FGs odlingsapp</title>
   <meta name="theme-color" content="#047857" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon-192.png" />
-  <link rel="stylesheet" href="/styles.css" />
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+    .tab-active { background: #2d5a27; color: white; }
+    .stat-card { animation: slideUp 0.4s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .calendar-day { min-height: 80px; }
+    .calendar-task { font-size: 0.7rem; }
+    html, body, #app { height: 100%; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
 </head>
-<body>
-  <header class="topbar">
-    <div class="topbar__inner">
-      <div class="brand">
-        <div class="brand__logo" aria-hidden="true">🌿</div>
-        <div class="brand__text">
-          <div class="brand__title">FGs odlingsapp</div>
-          <div class="brand__sub">Delad odlingsdagbok för Elin & Louise</div>
-        </div>
+
+<body class="h-full bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 overflow-auto">
+  <div id="app" class="w-full h-full flex flex-col">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-emerald-700 to-green-600 text-white p-4 shadow-lg flex-shrink-0">
+      <div class="max-w-6xl mx-auto">
+        <h1 id="app-title" class="text-2xl font-extrabold flex items-center gap-2">🌱 FGs odlingsapp</h1>
       </div>
+    </header>
 
-      <!-- Desktop-meny -->
-      <nav class="nav" aria-label="Meny">
-        <a href="#oversikt">Översikt</a>
-        <a href="#sorter">Sorter</a>
-        <a href="#sadd">Sådd</a>
-        <a href="#batchar">Batchar</a>
-        <a href="#utvardering">Utvärdering</a>
-      </nav>
-    </div>
-
-    <!-- Mobil: snabbmeny (inte fixed; bara en rad) -->
-    <div class="mobile-tabs" aria-label="Snabbmeny">
-      <a href="#oversikt">Översikt</a>
-      <a href="#sorter">Sorter</a>
-      <a href="#sadd">Sådd</a>
-      <a href="#batchar">Batchar</a>
-      <a href="#utvardering">Utv.</a>
-    </div>
-  </header>
-
-  <main class="container">
-    <section id="oversikt" class="card">
-      <div class="card__head">
-        <h2>Översikt</h2>
-        <p class="muted">Allt sparas direkt i Firebase Firestore. Ingen inloggning.</p>
+    <!-- Navigation Tabs -->
+    <nav class="bg-white shadow-sm sticky top-0 z-10 flex-shrink-0">
+      <div class="max-w-6xl mx-auto flex overflow-x-auto">
+        <button type="button" onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">📊 Överblick</button>
+        <button type="button" onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button>
+        <button type="button" onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌻 Frösorter</button>
+        <button type="button" onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📝 Registrering</button>
       </div>
+    </nav>
 
-      <div class="stats">
-        <div class="stat">
-          <div class="stat__label">Sorter</div>
-          <div class="stat__value" id="statVarieties">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">Batchar</div>
-          <div class="stat__value" id="statBatches">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">Sådda</div>
-          <div class="stat__value" id="statSown">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat__label">Kvar</div>
-          <div class="stat__value" id="statRemaining">0</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="sorter" class="card">
-      <div class="card__head">
-        <h2>Sorter</h2>
-        <p class="muted">Lägg till frösorter och skötselanteckningar.</p>
-      </div>
-
-      <form id="varietyForm" class="form">
-        <div class="grid2">
-          <label class="field">
-            <span>Sortnamn</span>
-            <input name="name" required placeholder="t.ex. Tomat Moneymaker" />
-          </label>
-          <label class="field">
-            <span>Typ</span>
-            <input name="type" placeholder="t.ex. tomat, chili, blomma…" />
-          </label>
-        </div>
-        <label class="field">
-          <span>Skötsel (valfritt)</span>
-          <textarea name="care" rows="3" placeholder="Sådjup, temperatur, omskolning, avstånd, gödsel…"></textarea>
-        </label>
-
-        <div class="row">
-          <button class="btn btn--primary" type="submit">+ Lägg till sort</button>
-          <span class="muted tiny" id="varietyHint"></span>
-        </div>
-      </form>
-
-      <div class="table-wrap">
-        <table class="table" aria-label="Sorter">
-          <thead>
-            <tr>
-              <th>Sort</th>
-              <th>Typ</th>
-              <th>Skötsel</th>
-              <th class="col-actions">Åtgärder</th>
-            </tr>
-          </thead>
-          <tbody id="varietyTbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="sadd" class="card">
-      <div class="card__head">
-        <h2>Registrera sådd</h2>
-        <p class="muted">Varje sådd blir en egen <strong>batch</strong> (sådd-omgång).</p>
-      </div>
-
-      <form id="batchForm" class="form">
-        <div class="grid2">
-          <label class="field">
-            <span>Sort</span>
-            <select name="varietyId" id="varietySelect" required>
-              <option value="">Välj sort…</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Datum sådd</span>
-            <input name="sownDate" type="date" required />
-          </label>
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl mx-auto w-full p-4 overflow-auto">
+      <!-- Dashboard Tab -->
+      <section id="section-dashboard" class="fade-in space-y-6">
+        <!-- Statistics Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
+            <div class="text-2xl font-bold text-emerald-700" id="stat-total-sown">0</div>
+            <div class="text-xs text-gray-600 mt-1">🌱 Totalt sådda</div>
+          </div>
+          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
+            <div class="text-2xl font-bold text-blue-600" id="stat-potted">0</div>
+            <div class="text-xs text-gray-600 mt-1">🪴 Omskolande</div>
+          </div>
+          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
+            <div class="text-2xl font-bold text-red-600" id="stat-lost">0</div>
+            <div class="text-xs text-gray-600 mt-1">💀 Förlorade</div>
+          </div>
+          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
+            <div class="text-2xl font-bold text-indigo-600" id="stat-varieties">0</div>
+            <div class="text-xs text-gray-600 mt-1">🌻 Sorter</div>
+          </div>
         </div>
 
-        <div class="grid2">
-          <label class="field">
-            <span>Antal sådda</span>
-            <input name="sownCount" type="number" min="1" step="1" required placeholder="t.ex. 12" />
-          </label>
-          <label class="field">
-            <span>Anteckning (valfritt)</span>
-            <input name="note" placeholder="t.ex. värmematta, plastlock…" />
-          </label>
+        <!-- Personal Stats and Chart -->
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl shadow p-5">
+            <h3 class="font-bold text-emerald-800 mb-4">👥 Per person</h3>
+            <div id="person-stats" class="space-y-3"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-5">
+            <h3 class="font-bold text-emerald-800 mb-4">📊 Prestanda</h3>
+            <canvas id="successChart" class="max-h-64"></canvas>
+          </div>
         </div>
 
-        <button class="btn btn--primary" type="submit">+ Skapa batch</button>
-      </form>
-    </section>
-
-    <section id="batchar" class="card">
-      <div class="card__head">
-        <h2>Batchar</h2>
-        <p class="muted">Minska “kvar” per batch när någon tar plantor, omskolar eller om något dör.</p>
-      </div>
-
-      <div class="table-wrap">
-        <table class="table" aria-label="Batchar">
-          <thead>
-            <tr>
-              <th>Sort</th>
-              <th>Sådd</th>
-              <th class="num">Sådda</th>
-              <th class="num">Kvar</th>
-              <th class="num">Omskolade</th>
-              <th>Anteckning</th>
-              <th class="col-actions">Åtgärder</th>
-            </tr>
-          </thead>
-          <tbody id="batchTbody"></tbody>
-        </table>
-      </div>
-      <p class="muted tiny" style="margin-top:10px;">
-        Tips: “Ta plantor” kan vara när ni byter med varandra. “Förlust” när något dör.
-      </p>
-    </section>
-
-    <section id="utvardering" class="card">
-      <div class="card__head">
-        <h2>Utvärdering</h2>
-        <p class="muted">Spara lärdomar till nästa år (per sort).</p>
-      </div>
-
-      <form id="evalForm" class="form">
-        <div class="grid2">
-          <label class="field">
-            <span>Sort</span>
-            <select name="varietyId" id="evalSelect" required>
-              <option value="">Välj sort…</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Betyg (1–5)</span>
-            <input name="rating" type="number" min="1" max="5" step="1" required />
-          </label>
+        <!-- Weekly Loss Statistics -->
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl shadow p-5">
+            <h3 class="font-bold text-red-800 mb-4">📈 Förluster per vecka</h3>
+            <canvas id="weeklyLossChart" class="max-h-64"></canvas>
+          </div>
+          <div class="bg-white rounded-xl shadow p-5">
+            <h3 class="font-bold text-emerald-800 mb-4">🏆 Kategori-prestanda</h3>
+            <canvas id="categoryChart" class="max-h-64"></canvas>
+          </div>
         </div>
-        <label class="field">
-          <span>Kommentar</span>
-          <textarea name="comment" rows="3" placeholder="Vad funkade? Vad ska ni göra annorlunda?"></textarea>
-        </label>
-        <button class="btn btn--primary" type="submit">Spara utvärdering</button>
-      </form>
+      </section>
 
-      <div class="table-wrap">
-        <table class="table" aria-label="Utvärderingar">
-          <thead>
-            <tr>
-              <th>Sort</th>
-              <th class="num">Betyg</th>
-              <th>Kommentar</th>
-              <th class="col-actions">Åtgärder</th>
-            </tr>
-          </thead>
-          <tbody id="evalTbody"></tbody>
-        </table>
-      </div>
-    </section>
+      <!-- Calendar Tab -->
+      <section id="section-calendar" class="hidden fade-in">
+        <div class="bg-white rounded-xl shadow p-6 mb-6">
+          <h2 class="text-lg font-bold text-emerald-800 mb-4">📅 Odlingskalender</h2>
+          <div class="flex items-center justify-between mb-6 gap-2 flex-wrap">
+            <button type="button" onclick="previousMonth()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">← Föregående</button>
+            <h3 id="calendar-month" class="text-xl font-bold text-gray-800"></h3>
+            <button type="button" onclick="nextMonth()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">Nästa →</button>
+          </div>
+          <div class="grid grid-cols-7 gap-2">
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Mån</div>
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Tis</div>
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Ons</div>
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Tor</div>
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Fre</div>
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Lör</div>
+            <div class="font-bold text-center text-gray-600 text-sm py-2">Sön</div>
+            <div id="calendar-grid" class="col-span-7 grid grid-cols-7 gap-2"></div>
+          </div>
+        </div>
 
-    <footer class="footer muted tiny">
-      <div><strong>FGs odlingsapp</strong> – sparar live i Firestore.</div>
-    </footer>
-  </main>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-bold text-emerald-800 mb-4">👩 Elins uppgifter (nästa 30 dagar)</h3>
+            <div id="elin-tasks" class="space-y-2"></div>
+          </div>
+          <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-bold text-emerald-800 mb-4">👩 Louises uppgifter (nästa 30 dagar)</h3>
+            <div id="louise-tasks" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <!-- Varieties Tab -->
+      <section id="section-varieties" class="hidden fade-in">
+        <div class="bg-white rounded-xl shadow p-6 mb-6">
+          <h2 class="text-lg font-bold text-emerald-800 mb-4">➕ Lägg till frösort</h2>
+          <form id="variety-form" class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Namn på svenska</label>
+                <input type="text" id="variety-name" placeholder="t.ex. Gul blomsterärt" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Engelskt namn</label>
+                <input type="text" id="variety-english-name" placeholder="t.ex. Annual Phlox" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
+              <select id="variety-category" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
+                <option value="">Välj kategori</option>
+                <option value="Blomma">🌸 Blomma</option>
+                <option value="Tomat">🍅 Tomat</option>
+                <option value="Paprika/Chili">🫑 Paprika/Chili</option>
+                <option value="Grönsak">🥬 Grönsak</option>
+                <option value="Lök">🧅 Lök</option>
+              </select>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Årighet</label>
+                <input type="text" id="variety-perennial" placeholder="t.ex. Ettårig" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Höjd</label>
+                <input type="text" id="variety-height" placeholder="t.ex. 45 cm" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Färg</label>
+                <input type="text" id="variety-color" placeholder="t.ex. Gul" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Såtid</label>
+                <input type="text" id="variety-sow-time" placeholder="t.ex. mars-april" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Grottid (dagar)</label>
+                <input type="text" id="variety-germination" placeholder="t.ex. 5-15" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Växläge</label>
+                <input type="text" id="variety-location" placeholder="t.ex. sol-halvskugga" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Blomtid/Skördetid</label>
+              <input type="text" id="variety-bloom-time" placeholder="t.ex. juli-september" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Anteckningar (Impecta/Florea)</label>
+              <textarea id="variety-notes" rows="2" placeholder="Länk eller info..." class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none"></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md">✚ Lägg till frösort</button>
+          </form>
+        </div>
+
+        <h3 class="text-lg font-bold text-emerald-800 mb-4">🌻 Mina frösorter</h3>
+        <div id="varieties-list" class="grid gap-4 md:grid-cols-2"></div>
+      </section>
+
+      <!-- Registration Tab -->
+      <section id="section-register" class="hidden fade-in space-y-6">
+        <!-- Sow Seeds -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-bold text-emerald-800 mb-4">🌱 Registrera sådd</h2>
+          <form id="sow-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Frösort</label>
+              <select id="sow-variety" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required></select>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Antal frön</label>
+                <input type="number" id="sow-count" min="1" value="1" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Sådatum</label>
+                <input type="date" id="sow-date" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Sått av</label>
+                <select id="sow-by" class="w-full p-3 border-2 border-emerald-200 rounded-xl focus:border-emerald-500 focus:outline-none" required>
+                  <option value="">Välj</option>
+                  <option value="Elin">Elin</option>
+                  <option value="Louise">Louise</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md">🌱 Registrera sådd</button>
+          </form>
+        </div>
+
+        <!-- Pot Seedlings -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-bold text-blue-800 mb-4">🪴 Registrera omskolning</h2>
+          <div id="sown-list" class="space-y-3"></div>
+        </div>
+
+        <!-- Register Loss -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-bold text-red-800 mb-4">💀 Registrera/Uppdatera förlust</h2>
+          <div id="loss-form-list" class="space-y-4"></div>
+        </div>
+
+        <!-- Loss History -->
+        <div class="bg-white rounded-xl shadow p-6">
+          <h2 class="text-lg font-bold text-red-800 mb-4">📋 Förlusthistorik</h2>
+          <div id="loss-history" class="space-y-3"></div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="/app.js"></script>
   <script>
