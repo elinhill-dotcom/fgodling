@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sv" class="h-full">
+<html lang="sv">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -39,18 +39,22 @@
     @media (min-width: 640px){
       .logo-img-compact{ max-height: 60px; }
     }
-    </style>
+    
+    /* Mobile Safari: allow normal page scroll */
+    body { overflow: auto; -webkit-overflow-scrolling: touch; }
+</style>
   <style>body { box-sizing: border-box; }</style>
 </head>
 
-<body class="h-full bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 overflow-auto">
-  <div id="app" class="w-full h-full flex flex-col">
+<body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
+  <div id="app" class="w-full flex flex-col">
     <!-- Header -->
     <header id="appHeader" class="bg-white sticky top-0 z-20 shadow-sm">
       <div class="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center">
-        <img src="/assets/logo.png"
-             alt="Systrarna Hills Odling"
-             class="logo-img-compact">
+        <img src="/assets/logo.png" alt="Systrarna Hills Odling"
+             style="height:48px;width:auto;"
+             class="rounded-xl"
+        />
       </div>
     </header>
 
@@ -65,7 +69,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-1 max-w-6xl mx-auto w-full p-4 overflow-auto">
+    <main class="max-w-6xl mx-auto w-full p-4">
       <!-- Dashboard Tab -->
       <section id="section-dashboard" class="fade-in space-y-6">
         <!-- Statistics Grid -->
