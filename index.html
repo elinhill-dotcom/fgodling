@@ -27,40 +27,30 @@
     /* ~168px */
     }
 
-    /* Sticky logo + glow (always compact) */
-    .logo-img{
-      max-height: 74px; /* always small */
+    
+    /* Compact sticky logo */
+    .logo-img-compact{
+      max-height: 48px;
       width: auto;
       object-fit: contain;
-      border-radius: 16px;
-      filter:
-        drop-shadow(0 6px 16px rgba(4, 120, 87, 0.22))
-        drop-shadow(0 2px 8px rgba(16, 185, 129, 0.16));
-      transition: transform 200ms ease, filter 200ms ease;
-    }
-    .logo-img:active{
-      transform: scale(0.99);
-    }
-    /* Optional: little extra glow when at top */
-    #appHeader.is-top .logo-img{
-      filter:
-        drop-shadow(0 10px 26px rgba(4, 120, 87, 0.28))
-        drop-shadow(0 3px 12px rgba(16, 185, 129, 0.20));
+      border-radius: 12px;
+      filter: drop-shadow(0 4px 10px rgba(4,120,87,0.25));
     }
     @media (min-width: 640px){
-      .logo-img{ max-height: 86px; }
+      .logo-img-compact{ max-height: 60px; }
     }
-</style>
+    </style>
   <style>body { box-sizing: border-box; }</style>
 </head>
 
 <body class="h-full bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 overflow-auto">
   <div id="app" class="w-full h-full flex flex-col">
     <!-- Header -->
-    <header id="appHeader" class="bg-white/90 backdrop-blur sticky top-0 z-20 shadow-sm flex-shrink-0">
-      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center">
-        <img src="/assets/logo.png" alt="Systrarna Hills Odling" class="logo-img" />
-        <div class="h-1 w-28 bg-emerald-600 rounded-full mt-3"></div>
+    <header id="appHeader" class="bg-white sticky top-0 z-20 shadow-sm">
+      <div class="max-w-6xl mx-auto px-4 py-2 flex items-center justify-center">
+        <img src="/assets/logo.png"
+             alt="Systrarna Hills Odling"
+             class="logo-img-compact">
       </div>
     </header>
 
@@ -293,19 +283,5 @@
       window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
     }
   </script>
-    <script>
-    // Keep header sticky; add a subtle glow when at top
-    (function(){
-      const header = document.getElementById('appHeader');
-      if(!header) return;
-      const onScroll = () => {
-        if(window.scrollY <= 6) header.classList.add('is-top');
-        else header.classList.remove('is-top');
-      };
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
-    })();
-  </script>
-
-</body>
+    </body>
 </html>
