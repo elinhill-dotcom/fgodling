@@ -605,49 +605,68 @@ function updateOverview(){
   }).join("");
 }
 
-async function addComment(varietyId, varietyName){
-  const input = document.getElementById("comment-"+varietyId);
-  if(!input.value) return;
-  await createRecord({
-    record_type:"comment",
-    variety_id: varietyId,
-    variety_name: varietyName,
-    comment_text: input.value,
-    comment_by: "Elin & Louise"
-  });
-  input.value="";
-}
+window.addComment = async function(varietyId, varietyName){
+  try {
+    const input = document.getElementById("comment-"+varietyId);
+    if(!input || !input.value) return;
 
-async function saveReview(varietyId, varietyName){
-  const rating = parseInt(document.getElementById("rating-"+varietyId).value || 0, 10);
-  const grow = document.getElementById("grow-"+varietyId).value;
-
-  if(!rating){
-    alert("Ange betyg 1–5");
-    return;
-  }
-
-  const existing = allData.find(d=>d.record_type==="review" && d.variety_id===varietyId);
-
-  if(existing){
-    await updateRecord(existing.__backendId, {
-      rating: rating,
-      grow_again: grow,
-      updatedAt: new Date().toISOString()
-    });
-  }else{
     await createRecord({
-      record_type:"review",
+      record_type:"comment",
+      variety_id: varietyId,
+      variety_name: varietyName,
+      comment_text: input.value,
+      comment_by: "Elin & Louise",
+      createdAt: new Date().toISOString()
+    });
+
+    input.value = "";
+  } catch(error){
+    console.error("Comment save error:", error);
+    alert("Kunde inte spara kommentaren.");
+  }
+};
+
+window.saveReview = async function(varietyId, varietyName){
+  try {
+    const ratingInput = document.getElementById("rating-"+varietyId);
+    const growInput = document.getElementById("grow-"+varietyId);
+
+    if(!ratingInput){
+      alert("Kunde inte hitta betygsfältet.");
+      return;
+    }
+
+    const rating = parseInt(ratingInput.value, 10);
+    const grow = growInput ? growInput.value : "";
+
+    if(!rating || rating < 1 || rating > 5){
+      alert("Ange betyg 1–5");
+      return;
+    }
+
+    const existing = allData.find(d => d.record_type === "review" && d.variety_id === varietyId);
+
+    const payload = {
+      record_type: "review",
       variety_id: varietyId,
       variety_name: varietyName,
       rating: rating,
-      grow_again: grow,
-      createdAt: new Date().toISOString()
-    });
-  }
+      grow_again: grow || "",
+      updatedAt: new Date().toISOString()
+    };
 
-  alert("Utvärdering sparad!");
-}
+    if(existing){
+      await updateRecord(existing.__backendId, payload);
+    } else {
+      await createRecord(payload);
+    }
+
+    alert("Utvärdering sparad ✅");
+  } catch(error){
+    console.error("Review save error:", error);
+    alert("Något gick fel när utvärderingen sparades.");
+  }
+};
 
 
 // Extend calendar logic with plant-out dates
