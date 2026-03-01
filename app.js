@@ -348,8 +348,8 @@ function updateCalendar(){
 
   document.getElementById("calendar-grid").innerHTML = html;
 
-  const elinTasks = getTasks("Elin", 30);
-  const louiseTasks = getTasks("Louise", 30);
+  const elinTasks = [...getTasks("Elin", 30), ...getPlantTasks("Elin", 30)];
+  const louiseTasks = [...getTasks("Louise", 30), ...getPlantTasks("Louise", 30)];
 
   document.getElementById("elin-tasks").innerHTML = elinTasks.length === 0
     ? "<p class='text-gray-500'>Inga uppgifter</p>"
@@ -412,6 +412,7 @@ async function handleAddVariety(e){
     sow_time: document.getElementById("variety-sow-time").value,
     height: document.getElementById("variety-height").value,
     color: document.getElementById("variety-color").value,
+    plant_out_after_days: document.getElementById("variety-plant-after")?.value || 0,
     notes: document.getElementById("variety-notes").value
   };
 
@@ -515,7 +516,45 @@ function updateOverview(){
   const container = document.getElementById("overview-content");
   if(!container) return;
 
-  container.innerHTML = varieties.map(v => {
+  // Årets favoriter (topplista baserad på betyg)
+  const rated = varieties
+    .map(v => ({ v, review: reviews.find(r => r.variety_id === v.variety_id) }))
+    .filter(x => x.review && Number(x.review.rating) > 0)
+    .sort((a,b)=> Number(b.review.rating) - Number(a.review.rating));
+
+  const top = rated.slice(0, 5);
+
+  const favoritesHtml = `
+    <div class="bg-white rounded-xl shadow p-5">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <h3 class="font-bold text-emerald-800 text-lg">🏆 Årets favoriter</h3>
+        <p class="text-xs text-gray-500">Baserat på era sparade betyg</p>
+      </div>
+      ${top.length === 0 ?
+        `<p class="text-gray-500 mt-3 text-sm">Inga betyg än. Sätt betyg under en sort så dyker favoriterna upp här.</p>` :
+        `<div class="mt-4 grid gap-3 sm:grid-cols-2">
+          ${top.map((x, idx) => `
+            <div class="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="text-sm font-extrabold text-emerald-900">${idx+1}. ${x.v.variety_name}</div>
+                  <div class="text-xs text-gray-600">${x.v.category || "Okänd kategori"}</div>
+                </div>
+                <div class="text-sm font-extrabold text-indigo-700 bg-white/80 px-3 py-1 rounded-full border border-indigo-100">
+                  ⭐ ${Number(x.review.rating)}/5
+                </div>
+              </div>
+              <div class="mt-2 text-xs text-gray-600">
+                Odla igen: <span class="font-semibold">${x.review.grow_again === "yes" ? "Ja" : x.review.grow_again === "no" ? "Nej" : "—"}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>`
+      }
+    </div>
+  `;
+
+  container.innerHTML = favoritesHtml + varieties.map(v => {
     const vSown = sown.filter(s => s.variety_id === v.variety_id);
     const vLoss = losses.filter(l => l.variety_id === v.variety_id);
     const vComments = comments.filter(c => c.variety_id === v.variety_id);
@@ -580,20 +619,62 @@ async function addComment(varietyId, varietyName){
 }
 
 async function saveReview(varietyId, varietyName){
-  const rating = document.getElementById("rating-"+varietyId).value;
+  const rating = parseInt(document.getElementById("rating-"+varietyId).value || 0, 10);
   const grow = document.getElementById("grow-"+varietyId).value;
+
+  if(!rating){
+    alert("Ange betyg 1–5");
+    return;
+  }
 
   const existing = allData.find(d=>d.record_type==="review" && d.variety_id===varietyId);
 
   if(existing){
-    await updateRecord(existing.__backendId, {rating, grow_again: grow});
+    await updateRecord(existing.__backendId, {
+      rating: rating,
+      grow_again: grow,
+      updatedAt: new Date().toISOString()
+    });
   }else{
     await createRecord({
       record_type:"review",
       variety_id: varietyId,
       variety_name: varietyName,
-      rating,
-      grow_again: grow
+      rating: rating,
+      grow_again: grow,
+      createdAt: new Date().toISOString()
     });
   }
+
+  alert("Utvärdering sparad!");
+}
+
+
+// Extend calendar logic with plant-out dates
+function getPlantTasks(person, days){
+  const tasks = [];
+  const today = new Date();
+  const sown = allData.filter(d => d.record_type === "sown" && d.sown_by === person);
+
+  sown.forEach(s => {
+    const variety = allData.find(v => v.record_type === "variety" && v.variety_id === s.variety_id);
+    if(!variety) return;
+
+    const plantAfter = parseInt(variety.plant_out_after_days || 0, 10);
+    if(!plantAfter) return;
+
+    const sowDate = new Date(s.sown_date);
+    const plantDate = new Date(sowDate);
+    plantDate.setDate(plantDate.getDate() + plantAfter);
+
+    const daysLeft = Math.floor((plantDate - today) / (1000*60*60*24));
+    if(daysLeft >= 0 && daysLeft <= days){
+      tasks.push({
+        date: plantDate.toLocaleDateString("sv-SE"),
+        text: "🌤 Plantera ut " + s.variety_name + (daysLeft===0?" IDAG!":" om "+daysLeft+"d")
+      });
+    }
+  });
+
+  return tasks;
 }
