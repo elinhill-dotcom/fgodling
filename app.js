@@ -113,6 +113,7 @@ function updateUI(){
   if (currentTab === "calendar") updateCalendar();
   if (currentTab === "varieties") updateVarieties();
   if (currentTab === "register") updateRegister();
+  if (currentTab === "overview") updateOverview();
 }
 
 function updateDashboard(){
@@ -501,3 +502,98 @@ window.deleteLoss = async function(lossBackendId){
 // expose for form handlers
 window.handleAddVariety = handleAddVariety;
 window.handleSowForm = handleSowForm;
+
+
+// ---------- Overview & Reviews ----------
+function updateOverview(){
+  const varieties = allData.filter(d => d.record_type === "variety");
+  const sown = allData.filter(d => d.record_type === "sown");
+  const losses = allData.filter(d => d.record_type === "loss");
+  const comments = allData.filter(d => d.record_type === "comment");
+  const reviews = allData.filter(d => d.record_type === "review");
+
+  const container = document.getElementById("overview-content");
+  if(!container) return;
+
+  container.innerHTML = varieties.map(v => {
+    const vSown = sown.filter(s => s.variety_id === v.variety_id);
+    const vLoss = losses.filter(l => l.variety_id === v.variety_id);
+    const vComments = comments.filter(c => c.variety_id === v.variety_id);
+    const review = reviews.find(r => r.variety_id === v.variety_id);
+
+    const totalSown = vSown.reduce((s,d)=> s + (Number(d.sown_count)||0),0);
+    const totalLost = vLoss.reduce((s,d)=> s + (Number(d.lost_count)||0),0);
+    const survival = totalSown > 0 ? Math.round(((totalSown-totalLost)/totalSown)*100) : 0;
+
+    return `
+      <div class="bg-white rounded-xl shadow p-5 space-y-4">
+        <h3 class="font-bold text-emerald-800 text-lg">${v.variety_name}</h3>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+          <div>🌱 Sått: <strong>${totalSown}</strong></div>
+          <div>💀 Förlorat: <strong>${totalLost}</strong></div>
+          <div>📊 Överlevnad: <strong>${survival}%</strong></div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-gray-700 mb-2">💬 Kommentarer</h4>
+          ${vComments.map(c=>`
+            <div class="text-sm bg-gray-50 p-2 rounded mb-2">
+              <div class="text-xs text-gray-500">${new Date(c.createdAt?.seconds*1000 || Date.now()).toLocaleDateString("sv-SE")} • ${c.comment_by}</div>
+              ${c.comment_text}
+            </div>
+          `).join("")}
+          <div class="flex gap-2 mt-2">
+            <input type="text" id="comment-${v.variety_id}" placeholder="Skriv kommentar..." class="flex-1 p-2 border rounded text-sm">
+            <button onclick="addComment('${v.variety_id}','${v.variety_name}')" class="bg-emerald-600 text-white px-3 py-2 rounded text-sm">Spara</button>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-gray-700 mb-2">⭐ Utvärdering</h4>
+          <div class="grid sm:grid-cols-3 gap-2 text-sm">
+            <input type="number" min="1" max="5" id="rating-${v.variety_id}" value="${review?.rating||''}" placeholder="Betyg 1-5" class="p-2 border rounded">
+            <select id="grow-${v.variety_id}" class="p-2 border rounded">
+              <option value="">Odla igen?</option>
+              <option value="yes" ${review?.grow_again==="yes"?"selected":""}>Ja</option>
+              <option value="no" ${review?.grow_again==="no"?"selected":""}>Nej</option>
+            </select>
+            <button onclick="saveReview('${v.variety_id}','${v.variety_name}')" class="bg-indigo-600 text-white px-3 py-2 rounded">Spara</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function addComment(varietyId, varietyName){
+  const input = document.getElementById("comment-"+varietyId);
+  if(!input.value) return;
+  await createRecord({
+    record_type:"comment",
+    variety_id: varietyId,
+    variety_name: varietyName,
+    comment_text: input.value,
+    comment_by: "Elin & Louise"
+  });
+  input.value="";
+}
+
+async function saveReview(varietyId, varietyName){
+  const rating = document.getElementById("rating-"+varietyId).value;
+  const grow = document.getElementById("grow-"+varietyId).value;
+
+  const existing = allData.find(d=>d.record_type==="review" && d.variety_id===varietyId);
+
+  if(existing){
+    await updateRecord(existing.__backendId, {rating, grow_again: grow});
+  }else{
+    await createRecord({
+      record_type:"review",
+      variety_id: varietyId,
+      variety_name: varietyName,
+      rating,
+      grow_again: grow
+    });
+  }
+}

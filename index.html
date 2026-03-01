@@ -77,6 +77,7 @@
         <button type="button" onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button>
         <button type="button" onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌻 Frösorter</button>
         <button type="button" onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📝 Registrering</button>
+        <button type="button" onclick="showTab('overview')" id="tab-overview" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📈 Översikt</button>
       </div>
     </nav>
 
@@ -290,7 +291,13 @@
           <div id="loss-history" class="space-y-3"></div>
         </div>
       </section>
-    </main>
+    
+      <!-- Overview Tab -->
+      <section id="section-overview" class="hidden fade-in space-y-6">
+        <div id="overview-content" class="space-y-6"></div>
+      </section>
+
+</main>
   </div>
 
   <script type="module" src="/app.js"></script>
