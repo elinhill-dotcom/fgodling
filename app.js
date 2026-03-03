@@ -869,3 +869,26 @@ window.revertPotting = async function(backendId){
     alert("Kunde inte ångra.");
   }
 };
+
+
+// ---------- SYSTEM RESET ----------
+window.resetSystem = async function(){
+  const confirmReset = confirm("Vill du verkligen nollställa hela systemet? Detta tar bort ALLT.");
+  if(!confirmReset) return;
+
+  const doubleCheck = prompt("Skriv RESET för att bekräfta:");
+  if(doubleCheck !== "RESET"){
+    alert("Avbruten.");
+    return;
+  }
+
+  try{
+    for(const rec of [...allData]){
+      await deleteRecord(rec.__backendId);
+    }
+    alert("Systemet är nu nollställt.");
+  }catch(e){
+    console.error(e);
+    alert("Kunde inte nollställa.");
+  }
+};
