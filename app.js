@@ -268,7 +268,11 @@ function updateRegister(){
           <p class="font-bold text-gray-800">${escapeHtml(s.variety_name)}</p>
           <p class="text-sm text-gray-600">${Number(s.sown_count)||0} frön • ${new Date(s.sown_date).toLocaleDateString("sv-SE")} • Satt av: ${escapeHtml(s.sown_by||"")}</p>
         </div>
-        <button type="button" onclick="registerPotting('${s.__backendId}')" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🪴 Omskola</button>
+        <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
+          <button type="button" onclick="registerPotting('${s.__backendId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🪴 Omskola</button>
+          <button type="button" onclick="editEvent('${s.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera</button>
+          <button type="button" onclick="deleteEvent('${s.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort</button>
+        </div>
       </div>
     </div>
   `).join("");
@@ -314,7 +318,10 @@ function updateRegister(){
               <p class="font-bold text-red-900">${escapeHtml(l.variety_name)}</p>
               <p class="text-sm text-red-700">${Number(l.lost_count)||0} frön • ${new Date(l.loss_date).toLocaleDateString("sv-SE")} • ${escapeHtml(l.lost_stage||"")} • ${escapeHtml(l.lost_by||"")}</p>
             </div>
-            <button type="button" onclick="deleteLoss('${l.__backendId}')" class="w-full sm:w-auto text-xs bg-red-200 hover:bg-red-300 text-red-800 px-3 py-2 rounded transition-all">🗑️ Ta bort</button>
+            <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
+              <button type="button" onclick="editEvent('${l.__backendId}')" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition-all">✏️ Redigera</button>
+              <button type="button" onclick="deleteEvent('${l.__backendId}')" class="text-xs bg-red-200 hover:bg-red-300 text-red-800 px-3 py-2 rounded transition-all">🗑️ Ta bort</button>
+            </div>
           </div>
         </div>
       `).join("");
@@ -578,7 +585,13 @@ function updateOverview(){
           <h4 class="font-semibold text-gray-700 mb-2">💬 Kommentarer</h4>
           ${vComments.map(c=>`
             <div class="text-sm bg-gray-50 p-2 rounded mb-2">
-              <div class="text-xs text-gray-500">${new Date(c.createdAt?.seconds*1000 || Date.now()).toLocaleDateString("sv-SE")} • ${c.comment_by}</div>
+              <div class="flex items-start justify-between gap-2">
+                <div class="text-xs text-gray-500">${new Date(c.createdAt?.seconds*1000 || Date.now()).toLocaleDateString("sv-SE")} • ${c.comment_by}</div>
+                <div class="flex gap-2">
+                  <button class="text-xs text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded" onclick="editEvent('${c.__backendId}')">Redigera</button>
+                  <button class="text-xs text-red-700 bg-red-100 hover:bg-red-200 px-2 py-1 rounded" onclick="deleteComment('${c.__backendId}')">Ta bort</button>
+                </div>
+              </div>
               ${c.comment_text}
             </div>
           `).join("")}
@@ -597,7 +610,10 @@ function updateOverview(){
               <option value="yes" ${review?.grow_again==="yes"?"selected":""}>Ja</option>
               <option value="no" ${review?.grow_again==="no"?"selected":""}>Nej</option>
             </select>
-            <button onclick="saveReview('${v.variety_id}','${v.variety_name}')" class="bg-indigo-600 text-white px-3 py-2 rounded">Spara</button>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="saveReview('${v.variety_id}','${v.variety_name}')" class="bg-indigo-600 text-white px-3 py-2 rounded">Spara</button>
+              ${review ? `<button onclick="deleteReview('${review.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded">Ta bort</button>` : ``}
+            </div>
           </div>
         </div>
       </div>
@@ -697,3 +713,117 @@ function getPlantTasks(person, days){
 
   return tasks;
 }
+
+
+// ---------- Edit/Delete helpers (global for onclick) ----------
+window.deleteEvent = async function(backendId){
+  try{
+    const rec = allData.find(d => d.__backendId === backendId);
+    if(!rec) return alert("Händelsen hittas inte.");
+    const label = rec.record_type === "sown" ? "sådd" : rec.record_type === "potted" ? "omskolning" : rec.record_type === "loss" ? "förlust" : rec.record_type;
+    if(!confirm("Ta bort " + label + " för " + (rec.variety_name || "") + "?")) return;
+    await deleteRecord(backendId);
+  }catch(e){
+    console.error(e);
+    alert("Kunde inte ta bort.");
+  }
+};
+
+window.editEvent = async function(backendId){
+  try{
+    const rec = allData.find(d => d.__backendId === backendId);
+    if(!rec) return alert("Händelsen hittas inte.");
+    const type = rec.record_type;
+
+    if(type === "sown" || type === "potted"){
+      const currentCount = type === "sown" ? rec.sown_count : (rec.potted_count ?? rec.sown_count);
+      const newCount = prompt("Antal (frön/plantor):", String(currentCount ?? ""));
+      if(newCount === null) return;
+      const count = parseInt(newCount, 10);
+      if(Number.isNaN(count) || count < 0) return alert("Ogiltigt antal.");
+
+      const dateKey = type === "sown" ? "sown_date" : "potted_date";
+      const currentDate = (rec[dateKey] || "").slice(0,10) || "";
+      const newDate = prompt("Datum (YYYY-MM-DD):", currentDate);
+      if(newDate === null) return;
+
+      const byKey = type === "sown" ? "sown_by" : "potted_by";
+      const newBy = prompt("Vem? (Elin/Louise):", rec[byKey] || "");
+      if(newBy === null) return;
+
+      const patch = {};
+      if(type === "sown"){
+        patch.sown_count = count;
+        patch.sown_date = newDate;
+        patch.sown_by = newBy;
+      }else{
+        patch.potted_count = count;
+        patch.potted_date = newDate + "T00:00:00Z";
+        patch.potted_by = newBy;
+      }
+      await updateRecord(backendId, patch);
+      alert("Uppdaterat ✅");
+      return;
+    }
+
+    if(type === "loss"){
+      const newCount = prompt("Antal förlorade:", String(rec.lost_count ?? ""));
+      if(newCount === null) return;
+      const count = parseInt(newCount, 10);
+      if(Number.isNaN(count) || count < 0) return alert("Ogiltigt antal.");
+
+      const currentDate = (rec.loss_date || "").slice(0,10) || "";
+      const newDate = prompt("Datum (YYYY-MM-DD):", currentDate);
+      if(newDate === null) return;
+
+      const newStage = prompt("Läge (Grodd/Spirad/Blad/Omskold/Växande):", rec.lost_stage || "");
+      if(newStage === null) return;
+
+      const newBy = prompt("Vem? (Elin/Louise):", rec.lost_by || "");
+      if(newBy === null) return;
+
+      await updateRecord(backendId, {
+        lost_count: count,
+        loss_date: newDate + "T00:00:00Z",
+        lost_stage: newStage,
+        lost_by: newBy
+      });
+      alert("Uppdaterat ✅");
+      return;
+    }
+
+    if(type === "comment"){
+      const newText = prompt("Ändra kommentar:", rec.comment_text || "");
+      if(newText === null) return;
+      await updateRecord(backendId, { comment_text: newText });
+      alert("Uppdaterat ✅");
+      return;
+    }
+
+    if(type === "review"){
+      const newRating = prompt("Ändra betyg (1–5):", String(rec.rating ?? ""));
+      if(newRating === null) return;
+      const rating = parseInt(newRating, 10);
+      if(Number.isNaN(rating) || rating < 1 || rating > 5) return alert("Betyg måste vara 1–5.");
+      const newGrow = prompt("Odla igen? (yes/no):", rec.grow_again || "");
+      if(newGrow === null) return;
+      await updateRecord(backendId, { rating, grow_again: newGrow });
+      alert("Uppdaterat ✅");
+      return;
+    }
+
+    alert("Den här typen går inte att redigera här.");
+  }catch(e){
+    console.error(e);
+    alert("Kunde inte uppdatera.");
+  }
+};
+
+window.deleteComment = async function(backendId){
+  if(!confirm("Ta bort kommentaren?")) return;
+  await deleteRecord(backendId);
+};
+window.deleteReview = async function(backendId){
+  if(!confirm("Ta bort utvärderingen?")) return;
+  await deleteRecord(backendId);
+};
