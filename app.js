@@ -261,7 +261,13 @@ function updateRegister(){
   const losses = allData.filter(d => d.record_type === "loss");
 
   // Potting list
-  document.getElementById("sown-list").innerHTML = sown.map(s => `
+  const pottedBatches = allData
+    .filter(d => d.record_type === "potted")
+    .sort((a,b)=> new Date((b.potted_date||b.sown_date||"")) - new Date((a.potted_date||a.sown_date||"")));
+
+  document.getElementById("sown-list").innerHTML = `
+    <div class="text-sm font-bold text-gray-800 mb-2">🌱 Sådda batchar</div>
+  ` + (sown.length === 0 ? `<p class="text-gray-500 text-sm">Inga sådda batchar ännu.</p>` : sown.map(s => `
     <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div>
@@ -275,7 +281,23 @@ function updateRegister(){
         </div>
       </div>
     </div>
-  `).join("");
+  `).join("")) + `
+    <div class="mt-6 text-sm font-bold text-gray-800 mb-2">🪴 Omskolade batchar</div>
+  ` + (pottedBatches.length === 0 ? `<p class="text-gray-500 text-sm">Inga omskolade batchar ännu.</p>` : pottedBatches.map(p => `
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-l-4 border-indigo-500">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+        <div>
+          <p class="font-bold text-gray-800">${escapeHtml(p.variety_name)}</p>
+          <p class="text-sm text-gray-600">${Number(p.potted_count||p.sown_count||0)} plantor • ${new Date((p.potted_date||p.sown_date)).toLocaleDateString("sv-SE")} • Av: ${escapeHtml(p.potted_by||p.sown_by||"")}</p>
+        </div>
+        <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
+          <button type="button" onclick="revertPotting('${p.__backendId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">↩️ Ångra</button>
+          <button type="button" onclick="editEvent('${p.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera</button>
+          <button type="button" onclick="deleteEvent('${p.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort</button>
+        </div>
+      </div>
+    </div>
+  `).join(""));
 
   // Loss forms
   document.getElementById("loss-form-list").innerHTML = sown.map(s => `
@@ -826,4 +848,24 @@ window.deleteComment = async function(backendId){
 window.deleteReview = async function(backendId){
   if(!confirm("Ta bort utvärderingen?")) return;
   await deleteRecord(backendId);
+};
+
+
+window.revertPotting = async function(backendId){
+  try{
+    const rec = allData.find(d => d.__backendId === backendId);
+    if(!rec) return alert("Hittar inte batchen.");
+    if(rec.record_type !== "potted") return alert("Den här batchen är inte omskolad.");
+    if(!confirm("Ångra omskolning och göra den till sådd igen?")) return;
+
+    await updateRecord(backendId, {
+      record_type: "sown",
+      sown_count: rec.sown_count ?? rec.potted_count ?? 0,
+      sown_date: (rec.sown_date || (rec.potted_date ? String(rec.potted_date).slice(0,10) : "")),
+      sown_by: rec.sown_by ?? rec.potted_by ?? ""
+    });
+  }catch(e){
+    console.error(e);
+    alert("Kunde inte ångra.");
+  }
 };
