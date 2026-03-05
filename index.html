@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title><span class="app-title">Systrarna Hills Odlingsapp</span></title>
+  <title>Systrarna Hills Odlingsapp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <meta name="theme-color" content="#047857" />
 
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,393 +21,50 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-  
   <style>
-    :root{
-      --cream:#FFF7F1;
-      --paper:#FDFBF7;
-      --ink:#2f2a26;
-      --sage:#A9C8B2;
-      --sage-dark:#587B68;
-      --rose:#E9B7C8;
-      --lav:#CFC8F2;
-      --sand:#EADFD6;
-      --outline: rgba(120,95,80,.35);
-      --shadow: 0 10px 26px rgba(90,70,60,.12);
-      --shadow-soft: 0 6px 14px rgba(90,70,60,.10);
-    }
-
-    body{
-      font-family:"Quicksand", system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-      background:
-        radial-gradient(1200px 800px at 12% 8%, rgba(233,183,200,.45), transparent 60%),
-        radial-gradient(950px 700px at 90% 0%, rgba(207,200,242,.45), transparent 55%),
-        radial-gradient(1000px 800px at 70% 92%, rgba(169,200,178,.35), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0)),
-        var(--cream) !important;
-      color: var(--ink);
-    }
-
-    /* subtle watercolor paper texture (CSS-only) */
-    body:before{
-      content:"";
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      opacity:.20;
-      background-image:
-        radial-gradient(circle at 20% 30%, rgba(90,70,60,.12) 0 1px, transparent 2px),
-        radial-gradient(circle at 80% 40%, rgba(90,70,60,.10) 0 1px, transparent 2px),
-        radial-gradient(circle at 50% 70%, rgba(90,70,60,.10) 0 1px, transparent 2px),
-        repeating-linear-gradient(0deg, rgba(90,70,60,.04), rgba(90,70,60,.04) 1px, transparent 1px, transparent 6px);
-      mix-blend-mode:multiply;
-    }
-
-    /* App "phone paper" frame feel */
-    main, .container, #app, .max-w-6xl{
-      border-radius: 28px;
-    }
-
-    /* Hand-drawn paper cards */
-    .bg-white.rounded-xl.shadow,
-    .bg-white.rounded-xl.shadow-sm,
-    .bg-white.rounded-xl.shadow-md,
-    .bg-white.rounded-xl.shadow-lg,
-    .bg-white.rounded-xl.shadow-xl,
-    .bg-white.rounded-2xl.shadow,
-    .bg-white.rounded-2xl.shadow-lg{
-      background: rgba(253,251,247,.92) !important;
-      border: 2px solid rgba(234,223,214,.95) !important;
-      box-shadow: var(--shadow) !important;
-      position: relative;
-      overflow: hidden;
-    }
-    /* faint pastel wash inside cards */
-    .bg-white.rounded-xl.shadow:after{
-      content:"";
-      position:absolute;
-      inset:-40px;
-      background:
-        radial-gradient(circle at 20% 25%, rgba(233,183,200,.35), transparent 55%),
-        radial-gradient(circle at 85% 15%, rgba(207,200,242,.28), transparent 55%),
-        radial-gradient(circle at 70% 85%, rgba(169,200,178,.22), transparent 60%);
-      opacity:.55;
-      pointer-events:none;
-    }
-    /* keep card content above wash */
-    .bg-white.rounded-xl.shadow > *{ position: relative; z-index: 1; }
-
-    /* Header title: diary style */
-    .app-title{
-      font-family:"Caveat", cursive !important;
-      letter-spacing:.2px;
-      color: var(--sage-dark) !important;
-      text-shadow: 0 1px 0 rgba(255,255,255,.75);
-      font-size: 34px;
-      line-height: 1.0;
-    }
-    .app-subtitle{
-      font-family:"Caveat", cursive !important;
-      font-size: 20px;
-      color: rgba(47,42,38,.70) !important;
-    }
-
-    /* Tabs: watercolor “labels” */
-    nav{
-      gap: 8px !important;
-    }
-    nav button{
-      border-radius: 18px !important;
-      padding: 12px 14px !important;
-      border: 2px solid rgba(234,223,214,.95) !important;
-      background: rgba(253,251,247,.78) !important;
-      box-shadow: var(--shadow-soft) !important;
-      font-family:"Caveat", cursive !important;
-      font-size: 22px !important;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-    }
-    nav button:nth-child(1){ background: rgba(233,183,200,.35) !important; }
-    nav button:nth-child(2){ background: rgba(207,200,242,.32) !important; }
-    nav button:nth-child(3){ background: rgba(169,200,178,.32) !important; }
-    nav button:nth-child(4){ background: rgba(253,227,170,.24) !important; }
-    nav button:nth-child(5){ background: rgba(233,183,200,.25) !important; }
-
-    nav button.active, nav button[aria-current="page"], nav button.bg-emerald-800{
-      outline: 2px solid rgba(88,123,104,.35);
-      transform: translateY(-1px);
-    }
-
-    /* Primary buttons */
-    button.bg-emerald-600, button.bg-emerald-700,
-    button.bg-blue-600, button.bg-blue-700,
-    button.bg-indigo-600, button.bg-indigo-700{
-      background: linear-gradient(135deg, rgba(169,200,178,.95), rgba(233,183,200,.70)) !important;
-      color: var(--ink) !important;
-      border: 2px solid rgba(234,223,214,.95) !important;
-      box-shadow: var(--shadow-soft) !important;
-      border-radius: 16px !important;
-    }
-
-    /* Danger buttons: rose */
-    button.bg-red-100, button.bg-red-200, button.bg-red-300{
-      background: rgba(233,183,200,.45) !important;
-      border: 2px solid rgba(234,223,214,.95) !important;
-      color: rgba(90,40,60,.95) !important;
-      border-radius: 16px !important;
-    }
-
-    /* Inputs: paper */
-    input, select, textarea{
-      background: rgba(253,251,247,.94) !important;
-      border: 2px solid rgba(234,223,214,.95) !important;
-      border-radius: 16px !important;
-    }
-    label{
-      font-family:"Caveat", cursive !important;
-      font-size: 20px !important;
-      color: rgba(47,42,38,.85) !important;
-    }
-
-    /* Romantic tables & list “tables” */
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      background: rgba(253,251,247,.90);
-      border:2px solid rgba(234,223,214,.95);
-      border-radius:20px;
-      overflow:hidden;
-      box-shadow: var(--shadow-soft);
-    }
-    th, td{
-      padding: 12px 12px;
-      border-bottom:1px dashed rgba(120,95,80,.25);
-      font-size:14px;
-    }
-    th{
-      font-family:"Caveat", cursive;
-      font-size:20px;
-      color: var(--sage-dark);
-      background: linear-gradient(135deg, rgba(169,200,178,.32), rgba(233,183,200,.22));
-    }
-    tr:last-child td{ border-bottom:none; }
-
-    .romantic-divider{
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(169,200,178,.65), rgba(233,183,200,.65), transparent);
-      border-radius: 999px;
-    }
-
-    .winner-badge{
-      background: linear-gradient(135deg, rgba(233,183,200,.60), rgba(207,200,242,.55));
-      border: 2px solid rgba(234,223,214,.95);
-      box-shadow: var(--shadow-soft);
-    }
-
-    .stat-chip{
-      background: rgba(253,251,247,.92);
-      border:2px solid rgba(234,223,214,.95);
-      border-radius:18px;
-      padding:10px 12px;
-      box-shadow: var(--shadow-soft);
-      font-family:"Caveat", cursive;
-      font-size: 20px;
-    }
-
-    .paper-edge{
-      position: relative;
-    }
-    .paper-edge:before{
-      content:"";
-      position:absolute;
-      inset:-8px;
-      border-radius:28px;
-      background:
-        radial-gradient(circle at 18% 28%, rgba(233,183,200,.25), transparent 55%),
-        radial-gradient(circle at 82% 0%, rgba(207,200,242,.22), transparent 55%),
-        radial-gradient(circle at 70% 90%, rgba(169,200,178,.18), transparent 60%);
-      z-index:-1;
-      opacity:.65;
-    }
+    * { font-family: 'Nunito', sans-serif; }
+    .tab-active { background: #2d5a27; color: white; }
+    .stat-card { animation: slideUp 0.4s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .calendar-day { min-height: 80px; }
+    .calendar-task { font-size: 0.7rem; }
+    html, body, #app { height: 100%; }
   
-    /* Layout tweak: hide top tabs on small screens, keep on desktop */
-    nav#top-tabs{ display:none; }
-    @media (min-width: 640px){
-      nav#top-tabs{ display:flex; }
+    /* Logo animation + styling */
+    /* ~168px */
     }
-    </style>
 
+    
+    /* Compact sticky logo */
+    .logo-img-compact{
+      max-height: 48px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      filter: drop-shadow(0 4px 10px rgba(4,120,87,0.25));
+    }
+    @media (min-width: 640px){
+      .logo-img-compact{ max-height: 60px; }
+    }
+    
+    /* Mobile Safari: allow normal page scroll */
+    body { overflow: auto; -webkit-overflow-scrolling: touch; }
+</style>
   <style>body { box-sizing: border-box; }</style>
 
   <style>
-    :root{
-      --cream:#FFF8F2;
-      --paper:#FDFBF7;
-      --ink:#2f2a26;
-      --sage:#A9C8B2;
-      --sage-dark:#5E8A72;
-      --rose:#E8B7C7;
-      --lav:#CFC8F2;
-      --sand:#EADFD6;
-      --shadow: 0 10px 24px rgba(90,70,60,.10);
-      --shadow-soft: 0 6px 14px rgba(90,70,60,.10);
-    }
-
-    body{
-      font-family:"Quicksand", system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
-      background: radial-gradient(1200px 800px at 10% 10%, rgba(232,183,199,.35), transparent 60%),
-                  radial-gradient(900px 700px at 90% 0%, rgba(207,200,242,.35), transparent 55%),
-                  radial-gradient(1000px 800px at 70% 90%, rgba(169,200,178,.28), transparent 60%),
-                  var(--cream) !important;
-      color: var(--ink);
-    }
-
-    /* Hand-drawn paper cards */
-    .bg-white.rounded-xl.shadow,
-    .bg-white.rounded-xl.shadow-sm,
-    .bg-white.rounded-xl.shadow-md,
-    .bg-white.rounded-xl.shadow-lg,
-    .bg-white.rounded-xl.shadow-xl{
-      background: var(--paper) !important;
-      border: 2px solid var(--sand) !important;
-      box-shadow: var(--shadow) !important;
-    }
-
-    /* Softer section panels */
-    .bg-emerald-50, .bg-green-50, .bg-blue-50, .bg-indigo-50{
-      background: rgba(253,251,247,.72) !important;
-      border: 1px solid rgba(234,223,214,.9) !important;
-    }
-
-    /* Header title: diary style */
-    .app-title{
-      font-family:"Caveat", cursive !important;
-      letter-spacing:.2px;
-      color: var(--sage-dark) !important;
-      text-shadow: 0 1px 0 rgba(255,255,255,.75);
-    }
-    .app-subtitle{
-      color: rgba(47,42,38,.70) !important;
-    }
-
-    /* Tabs: pastel + pill */
-    nav button{
-      border-radius: 999px !important;
-      margin: 6px 6px !important;
-      border: 1px solid rgba(234,223,214,.9) !important;
-      background: rgba(253,251,247,.7) !important;
-      box-shadow: var(--shadow-soft);
-    }
-    nav button.active, nav button[aria-current="page"], nav button.bg-emerald-800{
-      background: linear-gradient(135deg, rgba(169,200,178,.7), rgba(232,183,199,.45)) !important;
-      color: var(--ink) !important;
-      border-color: rgba(169,200,178,.8) !important;
-    }
-
-    /* Primary buttons */
-    button.bg-emerald-600, button.bg-emerald-700,
-    button.bg-blue-600, button.bg-blue-700,
-    button.bg-indigo-600, button.bg-indigo-700{
-      background: linear-gradient(135deg, rgba(169,200,178,.95), rgba(232,183,199,.65)) !important;
-      color: var(--ink) !important;
-      border: 1px solid rgba(169,200,178,.9) !important;
-      box-shadow: var(--shadow-soft) !important;
-    }
-    button.bg-emerald-600:hover, button.bg-blue-600:hover, button.bg-indigo-600:hover{
-      filter: brightness(1.02);
-      transform: translateY(-1px);
-    }
-
-    /* Danger buttons: rose */
-    button.bg-red-100, button.bg-red-200, button.bg-red-300{
-      background: rgba(232,183,199,.45) !important;
-      border: 1px solid rgba(232,183,199,.9) !important;
-      color: rgba(90,40,60,.95) !important;
-    }
-
-    /* Inputs: paper */
-    input, select, textarea{
-      background: rgba(253,251,247,.92) !important;
-      border-color: rgba(234,223,214,.95) !important;
-    }
-
-    /* Cute separators */
-    .romantic-divider{
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(169,200,178,.65), rgba(232,183,199,.65), transparent);
-      border-radius: 999px;
-    }
-
-    /* Winner card */
-    .winner-badge{
-      background: linear-gradient(135deg, rgba(232,183,199,.75), rgba(207,200,242,.75));
-      border: 1px solid rgba(234,223,214,.95);
-      box-shadow: var(--shadow-soft);
-    }
-
-    /* Romantic tables & list “tables” */
-    table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      background: rgba(253,251,247,.85);
-      border:2px solid var(--sand);
-      border-radius:18px;
-      overflow:hidden;
-      box-shadow: var(--shadow-soft);
-    }
-    th, td{
-      padding: 12px 12px;
-      border-bottom:1px dashed rgba(234,223,214,.95);
-      font-size:14px;
-    }
-    th{
-      font-family:"Caveat", cursive;
-      font-size:18px;
-      letter-spacing:.2px;
-      color: var(--sage-dark);
-      background: linear-gradient(135deg, rgba(169,200,178,.35), rgba(232,183,199,.22));
-    }
-    tr:last-child td{ border-bottom:none; }
-
-    /* “Table rows” used across app (cards with colored left border) */
-    .border-l-4{
-      border-left-width: 6px !important;
-      border-left-style: solid !important;
-      border-left-color: rgba(169,200,178,.95) !important;
-    }
-    .bg-gradient-to-r{
-      background: rgba(253,251,247,.86) !important;
-    }
-
-    /* Make stats grids feel like scrapbook labels */
-    .stat-chip{
-      background: rgba(253,251,247,.9);
-      border:1px solid rgba(234,223,214,.95);
-      border-radius:16px;
-      padding:10px 12px;
-      box-shadow: var(--shadow-soft);
-    }
-
-    /* Slightly “hand-torn” edge feel */
-    .paper-edge{
-      position: relative;
-    }
-    .paper-edge:before{
-      content:"";
-      position:absolute;
-      inset:-6px;
-      border-radius:24px;
-      background: radial-gradient(circle at 20% 30%, rgba(232,183,199,.25), transparent 55%),
-                  radial-gradient(circle at 80% 0%, rgba(207,200,242,.22), transparent 55%),
-                  radial-gradient(circle at 70% 90%, rgba(169,200,178,.18), transparent 60%);
-      z-index:-1;
-      filter: blur(0px);
-      opacity:.55;
-    }
+    :root{--bg1:#f6f4f1;--bg2:#f1e9ec;--ink:#1f2a24;--muted:#6a6f6c;--sage:#2f4f3e;--card:#ffffffcc;--border:rgba(0,0,0,.06);--shadow:0 10px 30px rgba(0,0,0,.08);}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(1000px 700px at 15% 10%, rgba(244,214,224,.55), transparent 55%),radial-gradient(900px 650px at 85% 0%, rgba(214,229,242,.55), transparent 50%),radial-gradient(1000px 900px at 70% 90%, rgba(210,236,222,.50), transparent 55%),linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);}
+    h1,h2,h3,.serif{font-family:"Playfair Display",serif;letter-spacing:.2px;}
+    .tab-active{background:rgba(255,255,255,.65);border-bottom:3px solid rgba(47,79,62,.45);}
+    .soft-card{background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:18px;backdrop-filter:blur(6px);}
+    .pill{border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.65);padding:10px 14px;box-shadow:0 8px 22px rgba(0,0,0,.06);font-weight:600;}
+    .quick{border-radius:18px;padding:16px 14px;font-weight:700;border:1px solid var(--border);background:rgba(255,255,255,.75);box-shadow:0 10px 26px rgba(0,0,0,.07);}
+    .progress-wrap{background:rgba(255,255,255,.55);border:1px solid var(--border);border-radius:999px;overflow:hidden;height:10px;}
+    .progress-bar{height:10px;background:linear-gradient(90deg, rgba(47,79,62,.85), rgba(244,214,224,.75));}
+    .muted{color:var(--muted);}
   </style>
 
 </head>
@@ -427,7 +87,7 @@
         
       </div>
       <div class="text-gray-500 text-xs sm:text-sm">
-        <span class="app-subtitle">Odlingsdagbok & batchar</span>
+        Odlingsdagbok & batchar
       </div>
     </div>
   </div>
@@ -435,19 +95,27 @@
 
 
     <!-- Navigation Tabs -->
-    <nav id="top-tabs" class="bg-white shadow-sm sticky top-0 z-10 flex-shrink-0">
+    <nav class="bg-white shadow-sm sticky top-0 z-10 flex-shrink-0">
       <div class="max-w-6xl mx-auto flex overflow-x-auto">
         <button type="button" onclick="showTab('home')" id="tab-home" class="tab-active flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">🏡 Start</button>
-        <button type="button" onclick="showTab('dashboard')" id="tab-dashboard" class="flex-1 flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">📊 Överblick</button>
+<button type="button" onclick="showTab('dashboard')" id="tab-dashboard" class=" flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">📊 Överblick</button>
         <button type="button" onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button>
         <button type="button" onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌻 Frösorter</button>
         <button type="button" onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📝 Registrering</button>
-</div>
+        <button type="button" onclick="showTab('overview')" id="tab-overview" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📈 Översikt</button>
+      </div>
     </nav>
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto w-full p-4">
+
+      <!-- Home / Start Tab -->
+      <section id="section-home" class="fade-in space-y-6">
+        <div id="home-content" class="space-y-6"></div>
+      </section>
+
       <!-- Dashboard Tab -->
+
       <section id="section-dashboard" class="hidden fade-in space-y-6">
         <!-- Statistics Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -675,8 +343,8 @@
       </section>
     
       <!-- Overview Tab -->
-      <section id="section-home" class="fade-in space-y-6">
-        <div id="home-content" class="space-y-6"></div>
+      <section id="section-overview" class="hidden fade-in space-y-6">
+        <div id="overview-content" class="space-y-6"></div>
         <div id="install-card" class="bg-white rounded-xl shadow p-5 mt-8 hidden"></div>
       </section>
 

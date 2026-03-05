@@ -1,4 +1,4 @@
-const CACHE = "systrarna-hills-odlingsapp-v31";
+const CACHE = "systrarna-hills-odlingsapp-v21";
 const ASSETS = [
   "/",
   "/index.html",
@@ -31,10 +31,4 @@ self.addEventListener("fetch", (event) => {
       return res;
     }).catch(() => caches.match(event.request).then(r => r || caches.match("/index.html")))
   );
-});
-
-self.addEventListener('message', (event) => {
-  if(event.data && event.data.type === 'SKIP_WAITING'){
-    self.skipWaiting();
-  }
 });
