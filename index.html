@@ -442,14 +442,13 @@
         <button type="button" onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button>
         <button type="button" onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌻 Frösorter</button>
         <button type="button" onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📝 Registrering</button>
-        <button type="button" onclick="showTab('overview')" id="tab-overview" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📈 Översikt</button>
-      </div>
+</div>
     </nav>
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto w-full p-4">
       <!-- Dashboard Tab -->
-      <section id="section-dashboard" class="fade-in space-y-6">
+      <section id="section-dashboard" class="hidden fade-in space-y-6">
         <!-- Statistics Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
@@ -676,7 +675,7 @@
       </section>
     
       <!-- Overview Tab -->
-      <section id="section-home" class="hidden fade-in space-y-6">
+      <section id="section-home" class="fade-in space-y-6">
         <div id="home-content" class="space-y-6"></div>
         <div id="install-card" class="bg-white rounded-xl shadow p-5 mt-8 hidden"></div>
       </section>

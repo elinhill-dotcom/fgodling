@@ -1356,6 +1356,7 @@ function showTab(tab){
   currentTab = tab;
 
   const tabs = ["home","dashboard","calendar","varieties","register"];
+  if(!tabs.includes(tab)) tab = "home";
   tabs.forEach(t=>{
     const sec = document.getElementById("section-"+t);
     if(sec) sec.classList.toggle("hidden", t!==tab);
@@ -1445,5 +1446,8 @@ window.addEventListener('load', wireServiceWorkerUpdates);
 
 // ---- Tab init (v29 fix) ----
 window.addEventListener("DOMContentLoaded", () => {
-  try{ showTab("home"); }catch(e){ console.warn(e); }
+  try{ requestAnimationFrame(()=>showTab("home")); }catch(e){ console.warn(e); }
+});
+window.addEventListener("load", () => {
+  try{ showTab("home"); }catch(e){}
 });
