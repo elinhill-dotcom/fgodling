@@ -1,4 +1,4 @@
-const CACHE = "systrarna-hills-odlingsapp-v27";
+const CACHE = "systrarna-hills-odlingsapp-v31";
 const ASSETS = [
   "/",
   "/index.html",

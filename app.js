@@ -1350,7 +1350,7 @@ function updateHome(){
   `;
 }
 
-let currentTab = "home";
+
 
 function showTab(tab){
   currentTab = tab;
@@ -1381,7 +1381,7 @@ function showTab(tab){
 }
 
 function initTabs(){
-  document.querySelectorAll('button[data-tab]').forEach(btn=>{
+  document.querySelectorAll('#top-tabs button').forEach(btn=>{
     btn.addEventListener("click", ()=> showTab(btn.getAttribute("data-tab")));
   });
   showTab("home");
