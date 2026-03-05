@@ -153,7 +153,7 @@ function updateHome(){
   const survival = totalSown > 0 ? Math.round(((totalSown - totalLost)/totalSown)*100) : 0;
 
   const sumBy = (arr, name, fieldBy, fieldCount) => arr
-    .filter(d => String(d[fieldBy]||"").includes(name))
+    .filter(d => String(d[fieldBy]||"").toLowerCase().includes(String(name).toLowerCase()))
     .reduce((s,d)=> s + (Number(d[fieldCount])||0), 0);
 
   const elinSown = sumBy(sown, "Elin", "sown_by", "sown_count");
@@ -170,6 +170,10 @@ function updateHome(){
   const elinPts = score(elinSown, elinPotted, elinLost);
   const louisePts = score(louiseSown, louisePotted, louiseLost);
   const leader = (elinPts === louisePts) ? (elinSurv >= louiseSurv ? "Elin" : "Louise") : (elinPts > louisePts ? "Elin" : "Louise");
+  const totalDuelActivity = elinSown + louiseSown + elinPotted + louisePotted + elinLost + louiseLost;
+  const leaderText = (totalDuelActivity === 0) ? "Ingen leder ännu 🌱" :
+    (elinPts === louisePts && elinSurv === louiseSurv) ? "Oavgjort just nu ✨" :
+    `${leaderText}`;
 
   const rated = varieties
     .map(v => ({ v, review: reviews.find(r => r.variety_id === v.variety_id) }))
@@ -214,7 +218,7 @@ function updateHome(){
   container.innerHTML = `
     <div class="soft-card p-6">
       <div class="serif text-2xl font-semibold">Säsong 2026</div>
-      <div class="muted mt-1">${leader} leder just nu 🌸</div>
+      <div class="muted mt-1">${leaderText}</div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
         ${statChip(totalSown, "Totalt sådda")}
         ${statChip(totalPotted, "Omskolade")}
