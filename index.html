@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Systrarna Hills Odlingsapp</title>
+  <title><span class="app-title">Systrarna Hills Odlingsapp</span></title>
   <meta name="theme-color" content="#047857" />
 
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -50,6 +50,175 @@
     body { overflow: auto; -webkit-overflow-scrolling: touch; }
 </style>
   <style>body { box-sizing: border-box; }</style>
+
+  <style>
+    :root{
+      --cream:#FFF8F2;
+      --paper:#FDFBF7;
+      --ink:#2f2a26;
+      --sage:#A9C8B2;
+      --sage-dark:#5E8A72;
+      --rose:#E8B7C7;
+      --lav:#CFC8F2;
+      --sand:#EADFD6;
+      --shadow: 0 10px 24px rgba(90,70,60,.10);
+      --shadow-soft: 0 6px 14px rgba(90,70,60,.10);
+    }
+
+    body{
+      font-family:"Quicksand", system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+      background: radial-gradient(1200px 800px at 10% 10%, rgba(232,183,199,.35), transparent 60%),
+                  radial-gradient(900px 700px at 90% 0%, rgba(207,200,242,.35), transparent 55%),
+                  radial-gradient(1000px 800px at 70% 90%, rgba(169,200,178,.28), transparent 60%),
+                  var(--cream) !important;
+      color: var(--ink);
+    }
+
+    /* Hand-drawn paper cards */
+    .bg-white.rounded-xl.shadow,
+    .bg-white.rounded-xl.shadow-sm,
+    .bg-white.rounded-xl.shadow-md,
+    .bg-white.rounded-xl.shadow-lg,
+    .bg-white.rounded-xl.shadow-xl{
+      background: var(--paper) !important;
+      border: 2px solid var(--sand) !important;
+      box-shadow: var(--shadow) !important;
+    }
+
+    /* Softer section panels */
+    .bg-emerald-50, .bg-green-50, .bg-blue-50, .bg-indigo-50{
+      background: rgba(253,251,247,.72) !important;
+      border: 1px solid rgba(234,223,214,.9) !important;
+    }
+
+    /* Header title: diary style */
+    .app-title{
+      font-family:"Caveat", cursive !important;
+      letter-spacing:.2px;
+      color: var(--sage-dark) !important;
+      text-shadow: 0 1px 0 rgba(255,255,255,.75);
+    }
+    .app-subtitle{
+      color: rgba(47,42,38,.70) !important;
+    }
+
+    /* Tabs: pastel + pill */
+    nav button{
+      border-radius: 999px !important;
+      margin: 6px 6px !important;
+      border: 1px solid rgba(234,223,214,.9) !important;
+      background: rgba(253,251,247,.7) !important;
+      box-shadow: var(--shadow-soft);
+    }
+    nav button.active, nav button[aria-current="page"], nav button.bg-emerald-800{
+      background: linear-gradient(135deg, rgba(169,200,178,.7), rgba(232,183,199,.45)) !important;
+      color: var(--ink) !important;
+      border-color: rgba(169,200,178,.8) !important;
+    }
+
+    /* Primary buttons */
+    button.bg-emerald-600, button.bg-emerald-700,
+    button.bg-blue-600, button.bg-blue-700,
+    button.bg-indigo-600, button.bg-indigo-700{
+      background: linear-gradient(135deg, rgba(169,200,178,.95), rgba(232,183,199,.65)) !important;
+      color: var(--ink) !important;
+      border: 1px solid rgba(169,200,178,.9) !important;
+      box-shadow: var(--shadow-soft) !important;
+    }
+    button.bg-emerald-600:hover, button.bg-blue-600:hover, button.bg-indigo-600:hover{
+      filter: brightness(1.02);
+      transform: translateY(-1px);
+    }
+
+    /* Danger buttons: rose */
+    button.bg-red-100, button.bg-red-200, button.bg-red-300{
+      background: rgba(232,183,199,.45) !important;
+      border: 1px solid rgba(232,183,199,.9) !important;
+      color: rgba(90,40,60,.95) !important;
+    }
+
+    /* Inputs: paper */
+    input, select, textarea{
+      background: rgba(253,251,247,.92) !important;
+      border-color: rgba(234,223,214,.95) !important;
+    }
+
+    /* Cute separators */
+    .romantic-divider{
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(169,200,178,.65), rgba(232,183,199,.65), transparent);
+      border-radius: 999px;
+    }
+
+    /* Winner card */
+    .winner-badge{
+      background: linear-gradient(135deg, rgba(232,183,199,.75), rgba(207,200,242,.75));
+      border: 1px solid rgba(234,223,214,.95);
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* Romantic tables & list “tables” */
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      background: rgba(253,251,247,.85);
+      border:2px solid var(--sand);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow: var(--shadow-soft);
+    }
+    th, td{
+      padding: 12px 12px;
+      border-bottom:1px dashed rgba(234,223,214,.95);
+      font-size:14px;
+    }
+    th{
+      font-family:"Caveat", cursive;
+      font-size:18px;
+      letter-spacing:.2px;
+      color: var(--sage-dark);
+      background: linear-gradient(135deg, rgba(169,200,178,.35), rgba(232,183,199,.22));
+    }
+    tr:last-child td{ border-bottom:none; }
+
+    /* “Table rows” used across app (cards with colored left border) */
+    .border-l-4{
+      border-left-width: 6px !important;
+      border-left-style: solid !important;
+      border-left-color: rgba(169,200,178,.95) !important;
+    }
+    .bg-gradient-to-r{
+      background: rgba(253,251,247,.86) !important;
+    }
+
+    /* Make stats grids feel like scrapbook labels */
+    .stat-chip{
+      background: rgba(253,251,247,.9);
+      border:1px solid rgba(234,223,214,.95);
+      border-radius:16px;
+      padding:10px 12px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* Slightly “hand-torn” edge feel */
+    .paper-edge{
+      position: relative;
+    }
+    .paper-edge:before{
+      content:"";
+      position:absolute;
+      inset:-6px;
+      border-radius:24px;
+      background: radial-gradient(circle at 20% 30%, rgba(232,183,199,.25), transparent 55%),
+                  radial-gradient(circle at 80% 0%, rgba(207,200,242,.22), transparent 55%),
+                  radial-gradient(circle at 70% 90%, rgba(169,200,178,.18), transparent 60%);
+      z-index:-1;
+      filter: blur(0px);
+      opacity:.55;
+    }
+  </style>
+
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
@@ -70,7 +239,7 @@
         
       </div>
       <div class="text-gray-500 text-xs sm:text-sm">
-        Odlingsdagbok & batchar
+        <span class="app-subtitle">Odlingsdagbok & batchar</span>
       </div>
     </div>
   </div>

@@ -640,11 +640,29 @@ function updateOverview(){
   const top = rated.slice(0, 5);
 
   const favoritesHtml = `
-    <div class="bg-white rounded-xl shadow p-5">
+    <div class="bg-white rounded-xl shadow p-5 paper-edge">
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <h3 class="font-bold text-emerald-800 text-lg">🏆 Årets favoriter</h3>
         <p class="text-xs text-gray-500">Baserat på era sparade betyg</p>
       </div>
+      ${top.length > 0 ? (() => {
+          const champ = top[0];
+          const img = (champ.review && champ.review.review_image_url) || champ.v.variety_image_url || "";
+          return `
+            <div class="winner-badge rounded-2xl p-4 mt-4">
+              <div class="flex flex-col sm:flex-row gap-4 items-start">
+                ${img ? `<img src="${escapeHtml(img)}" class="w-full sm:w-44 h-44 object-cover rounded-2xl border border-white/60" alt="Årets favorit">` : ``}
+                <div class="flex-1">
+                  <div class="text-xs font-bold tracking-wide uppercase opacity-80">Årets favoritblomma</div>
+                  <div class="text-2xl font-extrabold mt-1" style="font-family:Caveat, cursive">${champ.v.variety_name}</div>
+                  <div class="text-sm mt-1 opacity-90">⭐ ${Number(champ.review.rating)}/5 • Odla igen: <strong>${champ.review.grow_again === "yes" ? "Ja" : champ.review.grow_again === "no" ? "Nej" : "—"}</strong></div>
+                  <div class="romantic-divider my-3"></div>
+                  <div class="text-sm opacity-90">Det här är vinnaren baserat på era betyg – perfekt för nästa års satsning 🌸</div>
+                </div>
+              </div>
+            </div>
+          `;
+        })() : ``}
       ${top.length === 0 ?
         `<p class="text-gray-500 mt-3 text-sm">Inga betyg än. Sätt betyg under en sort så dyker favoriterna upp här.</p>` :
         `<div class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -691,11 +709,14 @@ function updateOverview(){
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
-          <div>🌱 Sått: <strong>${totalSown}</strong></div>
-          <div>🪴 Omskolat: <strong>${totalPotted}</strong></div>
-          <div>📈 Omskolning: <strong>${pottingRate}%</strong></div>
-          <div>💀 Förlorat: <strong>${totalLost}</strong></div>
-          <div>📊 Överlevnad: <strong>${survival}%</strong></div>
+          <style>
+            /* inline-safe: no-op (kept for compatibility) */
+          </style>
+          <div class="stat-chip">🌱 Sått: <strong>${totalSown}</strong></div>
+          <div class="stat-chip">🪴 Omskolat: <strong>${totalPotted}</strong></div>
+          <div class="stat-chip">📈 Omskolning: <strong>${pottingRate}%</strong></div>
+          <div class="stat-chip">💀 Förlorat: <strong>${totalLost}</strong></div>
+          <div class="stat-chip">📊 Överlevnad: <strong>${survival}%</strong></div>
         </div>
 
         <div>
