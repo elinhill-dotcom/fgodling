@@ -671,6 +671,7 @@ function updateOverview(){
 
   container.innerHTML = favoritesHtml + varieties.map(v => {
     const vSown = sown.filter(s => s.variety_id === v.variety_id);
+  renderInstallCard();
     const vPotted = potted.filter(p => p.variety_id === v.variety_id);
     const vLoss = losses.filter(l => l.variety_id === v.variety_id);
     const vComments = comments.filter(c => c.variety_id === v.variety_id);
@@ -1083,3 +1084,81 @@ window.removeImageField = async function(backendId, fieldName){
     alert("Kunde inte ta bort bilden.");
   }
 };
+
+
+// ---------- PWA Install (Android/Chrome) ----------
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  // Prevent mini-infobar
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  renderInstallCard();
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  renderInstallCard(true);
+});
+
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function renderInstallCard(installed=false){
+  const el = document.getElementById("install-card");
+  if(!el) return;
+
+  if(isStandalone() || installed){
+    el.classList.add("hidden");
+    return;
+  }
+
+  // Show card in overview tab (it will still exist but hidden if not on tab)
+  el.classList.remove("hidden");
+
+  if(deferredInstallPrompt){
+    el.innerHTML = `
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h3 class="font-bold text-emerald-800 text-lg">📲 Installera appen</h3>
+          <p class="text-sm text-gray-600 mt-1">Installera Systrarna Hills Odlingsapp på hemskärmen så den känns som en riktig app.</p>
+        </div>
+        <button id="installBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Installera</button>
+      </div>
+    `;
+    const btn = document.getElementById("installBtn");
+    if(btn){
+      btn.onclick = async () => {
+        try{
+          deferredInstallPrompt.prompt();
+          const choice = await deferredInstallPrompt.userChoice;
+          if(choice && choice.outcome === "accepted"){
+            deferredInstallPrompt = null;
+            renderInstallCard();
+          }
+        }catch(e){
+          console.error(e);
+        }
+      };
+    }
+  } else if(isIOS()){
+    el.innerHTML = `
+      <h3 class="font-bold text-emerald-800 text-lg">📲 Installera på iPhone</h3>
+      <ol class="list-decimal pl-5 mt-2 text-sm text-gray-700 space-y-1">
+        <li>Öppna appen i <strong>Safari</strong>.</li>
+        <li>Tryck på <strong>Dela</strong> (fyrkanten med pil upp).</li>
+        <li>Välj <strong>Lägg till på hemskärmen</strong>.</li>
+      </ol>
+      <p class="text-xs text-gray-500 mt-3">Tips: Efter installation öppnas den utan adressfält.</p>
+    `;
+  } else {
+    el.innerHTML = `
+      <h3 class="font-bold text-emerald-800 text-lg">📲 Installera appen</h3>
+      <p class="text-sm text-gray-600 mt-1">I din webbläsare: meny → <strong>Installera app</strong> eller <strong>Lägg till på startskärmen</strong>.</p>
+    `;
+  }
+}

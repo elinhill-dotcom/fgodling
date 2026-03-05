@@ -1,11 +1,12 @@
-const CACHE = "fgs-odlingsapp-canva-style-v1";
+const CACHE = "systrarna-hills-odlingsapp-v21";
 const ASSETS = [
   "/",
   "/index.html",
   "/app.js",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/icons/icon-512.png",
+  "/assets/logo.png"
 ];
 
 self.addEventListener("install", (event) => {

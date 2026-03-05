@@ -1,6 +1,6 @@
 {
-  "name": "Systrarna Hills Odling",
-  "short_name": "Hills Odling",
+  "name": "Systrarna Hills Odlingsapp",
+  "short_name": "Odlingsapp",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ecfdf5",
@@ -16,5 +16,10 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "scope": "/",
+  "id": "/?source=pwa",
+  "description": "Systrarna Hills odlingsapp för batchar, kalender, översikt, bilder och utvärderingar.",
+  "orientation": "portrait",
+  "lang": "sv"
 }
