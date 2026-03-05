@@ -132,6 +132,8 @@ function updateUI(){
   if (currentTab === "register") updateRegister();
   if (currentTab === "overview") updateOverview();
   if(currentTab==='home') updateHome();
+  // Ensure currently selected tab is rendered
+  if(typeof showTab === 'function') showTab(currentTab || 'home');
 }
 
 function updateDashboard(){
