@@ -134,7 +134,7 @@ function updateUI(){
 }
 
 function updateDashboard(){
-  const sown = allData.filter(d => d.record_type === "sown");
+  const sown = allData.filter(d => d.record_type === "sown" && d.variety_id);
   const potted = allData.filter(d => d.record_type === "potted");
   const losses = allData.filter(d => d.record_type === "loss");
 
@@ -486,6 +486,7 @@ async function handleAddVariety(e){
   }
 
   const payload = {
+    batch_id: sowRecord.batch_id || sowRecord.__backendId,
     record_type: "variety",
     variety_id: id,
     variety_name: document.getElementById("variety-name").value,
@@ -532,8 +533,12 @@ async function handleSowForm(e){
   }
 
   // Batch = en sown-post (som i originalet)
+  const batchId = "batch_" + Date.now();
+
   const payload = {
+    batch_id: sowRecord.batch_id || sowRecord.__backendId,
     record_type: "sown",
+    batch_id: batchId,
     variety_id: varietyId,
     variety_name: varietyName,
     sown_date: document.getElementById("sow-date").value,
@@ -565,6 +570,7 @@ window.registerPotting = async function(sownBackendId){
   // Precis som din Canva-kod: ändra record_type till potted
   await updateRecord(sownBackendId, {
     record_type: "potted",
+    batch_id: rec.batch_id || rec.__backendId,
     potted_date: new Date().toISOString(),
     potted_count: rec.sown_count,
     potted_by: rec.sown_by
@@ -585,6 +591,7 @@ window.registerLoss = async function(sowId, sowedBy){
   if (!sowRecord) return;
 
   const payload = {
+    batch_id: sowRecord.batch_id || sowRecord.__backendId,
     record_type: "loss",
     variety_id: sowRecord.variety_id,
     variety_name: sowRecord.variety_name,
@@ -616,7 +623,7 @@ window.handleSowForm = handleSowForm;
 // ---------- Overview & Reviews ----------
 function updateOverview(){
   const varieties = allData.filter(d => d.record_type === "variety");
-  const sown = allData.filter(d => d.record_type === "sown");
+  const sown = allData.filter(d => d.record_type === "sown" && d.variety_id);
   const losses = allData.filter(d => d.record_type === "loss");
   const comments = allData.filter(d => d.record_type === "comment");
   const reviews = allData.filter(d => d.record_type === "review");
@@ -664,13 +671,16 @@ function updateOverview(){
 
   container.innerHTML = favoritesHtml + varieties.map(v => {
     const vSown = sown.filter(s => s.variety_id === v.variety_id);
+    const vPotted = potted.filter(p => p.variety_id === v.variety_id);
     const vLoss = losses.filter(l => l.variety_id === v.variety_id);
     const vComments = comments.filter(c => c.variety_id === v.variety_id);
     const review = reviews.find(r => r.variety_id === v.variety_id);
 
     const totalSown = vSown.reduce((s,d)=> s + (Number(d.sown_count)||0),0);
+    const totalPotted = vPotted.reduce((s,d)=> s + (Number(d.potted_count || d.sown_count)||0),0);
     const totalLost = vLoss.reduce((s,d)=> s + (Number(d.lost_count)||0),0);
     const survival = totalSown > 0 ? Math.round(((totalSown-totalLost)/totalSown)*100) : 0;
+    const pottingRate = totalSown > 0 ? Math.round((totalPotted/totalSown)*100) : 0;
 
     return `
       <div class="bg-white rounded-xl shadow p-5 space-y-4">
@@ -679,8 +689,10 @@ function updateOverview(){
           ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" alt="Fröpåse" class="h-16 w-16 rounded-xl object-cover border border-emerald-100">` : ``}
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
           <div>🌱 Sått: <strong>${totalSown}</strong></div>
+          <div>🪴 Omskolat: <strong>${totalPotted}</strong></div>
+          <div>📈 Omskolning: <strong>${pottingRate}%</strong></div>
           <div>💀 Förlorat: <strong>${totalLost}</strong></div>
           <div>📊 Överlevnad: <strong>${survival}%</strong></div>
         </div>
@@ -798,6 +810,7 @@ window.saveReview = async function(varietyId, varietyName){
     const existing = allData.find(d => d.record_type === "review" && d.variety_id === varietyId);
 
     const payload = {
+    batch_id: sowRecord.batch_id || sowRecord.__backendId,
       record_type: "review",
       variety_id: varietyId,
       variety_name: varietyName,
@@ -863,6 +876,14 @@ window.deleteEvent = async function(backendId){
     const label = rec.record_type === "sown" ? "sådd" : rec.record_type === "potted" ? "omskolning" : rec.record_type === "loss" ? "förlust" : rec.record_type;
     if(!confirm("Ta bort " + label + " för " + (rec.variety_name || "") + "?")) return;
     await deleteRecord(backendId);
+
+// Force UI refresh so overview & stats update immediately
+try{
+  allData = allData.filter(d => d.__backendId !== backendId);
+  updateUI();
+}catch(e){
+  console.warn("UI refresh fallback", e);
+}
   }catch(e){
     console.error(e);
     alert("Kunde inte ta bort.");
@@ -962,10 +983,26 @@ window.editEvent = async function(backendId){
 window.deleteComment = async function(backendId){
   if(!confirm("Ta bort kommentaren?")) return;
   await deleteRecord(backendId);
+
+// Force UI refresh so overview & stats update immediately
+try{
+  allData = allData.filter(d => d.__backendId !== backendId);
+  updateUI();
+}catch(e){
+  console.warn("UI refresh fallback", e);
+}
 };
 window.deleteReview = async function(backendId){
   if(!confirm("Ta bort utvärderingen?")) return;
   await deleteRecord(backendId);
+
+// Force UI refresh so overview & stats update immediately
+try{
+  allData = allData.filter(d => d.__backendId !== backendId);
+  updateUI();
+}catch(e){
+  console.warn("UI refresh fallback", e);
+}
 };
 
 
