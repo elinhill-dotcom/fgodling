@@ -131,6 +131,7 @@ function updateUI(){
   if (currentTab === "varieties") updateVarieties();
   if (currentTab === "register") updateRegister();
   if (currentTab === "overview") updateOverview();
+  if(currentTab==='home') updateHome();
 }
 
 function updateDashboard(){
@@ -1183,3 +1184,193 @@ function renderInstallCard(installed=false){
     `;
   }
 }
+
+
+function updateHome(){
+  const container = document.getElementById("home-content");
+  if(!container) return;
+
+  const varieties = allData.filter(d => d.record_type === "variety");
+  const sown = allData.filter(d => d.record_type === "sown");
+  const potted = allData.filter(d => d.record_type === "potted");
+  const losses = allData.filter(d => d.record_type === "loss");
+  const reviews = allData.filter(d => d.record_type === "review");
+
+  const totalSown = sown.reduce((s,d)=>s+(Number(d.sown_count)||0),0);
+  const totalPotted = potted.reduce((s,d)=>s+(Number(d.potted_count||d.sown_count)||0),0);
+  const totalLost = losses.reduce((s,d)=>s+(Number(d.lost_count)||0),0);
+  const survival = totalSown>0 ? Math.round(((totalSown-totalLost)/totalSown)*100) : 0;
+  const pottingRate = totalSown>0 ? Math.round((totalPotted/totalSown)*100) : 0;
+
+  const top = varieties
+    .map(v => ({ v, review: reviews.find(r => r.variety_id === v.variety_id) }))
+    .filter(x => x.review && x.review.rating)
+    .sort((a,b)=> (Number(b.review.rating)||0) - (Number(a.review.rating)||0));
+
+  const champ = top[0] || null;
+  const champImg = champ ? ((champ.review && champ.review.review_image_url) || champ.v.variety_image_url || "") : "";
+
+  container.innerHTML = `
+    <div class="bg-white rounded-xl shadow p-5 paper-edge">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div class="text-xs font-bold tracking-wide uppercase opacity-70">Systrarna Hills</div>
+          <div class="app-title" style="font-size:42px">Odlingsöversikt</div>
+          <div class="app-subtitle">En liten dagbok för sådd, batchar, blomning & tävling 🌸</div>
+        </div>
+        <img src="/assets/logo.png" alt="Logo" style="height:60px;width:60px;border-radius:16px;object-fit:cover;border:2px solid rgba(234,223,214,.95);box-shadow:var(--shadow-soft)">
+      </div>
+
+      <div class="romantic-divider my-4"></div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
+        <div class="stat-chip">🌱 Sått: <strong>${totalSown}</strong></div>
+        <div class="stat-chip">🪴 Omskolat: <strong>${totalPotted}</strong></div>
+        <div class="stat-chip">📈 Omskolning: <strong>${pottingRate}%</strong></div>
+        <div class="stat-chip">💀 Förlorat: <strong>${totalLost}</strong></div>
+        <div class="stat-chip">🌸 Klarat sig: <strong>${survival}%</strong></div>
+      </div>
+
+      <div class="romantic-divider my-4"></div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button class="bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold" onclick="showTab('register')">🌱 Ny sådd</button>
+        <button class="bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold" onclick="showTab('varieties')">🌸 Fröbibliotek</button>
+        <button class="bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold" onclick="showTab('calendar')">📅 Kalender</button>
+        <button class="bg-emerald-600 text-white px-4 py-3 rounded-lg font-semibold" onclick="showTab('overview')">📊 Sort-översikt</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 paper-edge">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <h3 class="font-bold text-emerald-800 text-lg">🏆 Syskonduellen</h3>
+        <p class="text-xs text-gray-500">Elin vs Louise • uppdateras automatiskt</p>
+      </div>
+
+      ${(() => {
+        const people = ["Elin","Louise"];
+        const stats = people.map(name => {
+          const sownBy = sown.filter(x => (x.sown_by||"").toLowerCase() === name.toLowerCase())
+                            .reduce((sum,x)=> sum + (Number(x.sown_count)||0), 0);
+          const pottedBy = potted.filter(x => (x.potted_by||"").toLowerCase() === name.toLowerCase())
+                              .reduce((sum,x)=> sum + (Number(x.potted_count||x.sown_count)||0), 0);
+          const lostBy = losses.filter(x => (x.lost_by||"").toLowerCase() === name.toLowerCase())
+                              .reduce((sum,x)=> sum + (Number(x.lost_count)||0), 0);
+          const survivalPct = sownBy > 0 ? Math.max(0, Math.min(100, Math.round(((sownBy - lostBy)/sownBy)*100))) : 0;
+          // Simple points: sow +1, potting +2, loss -1
+          const points = (sownBy*1) + (pottedBy*2) - (lostBy*1);
+          return { name, sownBy, pottedBy, lostBy, survivalPct, points };
+        });
+
+        // Leader by points, tie-breaker survival
+        const sorted = [...stats].sort((a,b)=> (b.points-a.points) || (b.survivalPct-a.survivalPct));
+        const leader = sorted[0];
+        const maxPoints = Math.max(1, ...stats.map(s=>s.points));
+        const clamp = (n)=> Math.max(0, Math.min(100, n));
+
+        const row = (s) => `
+          <div class="bg-white/60 rounded-2xl p-4 border" style="border-color: rgba(234,223,214,.95)">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">${s.name === leader.name ? "🥇" : "🌸"}</span>
+                <div class="text-2xl font-extrabold" style="font-family:Caveat, cursive">${s.name}</div>
+              </div>
+              <div class="text-sm opacity-90"><strong>${s.points}</strong> poäng</div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mt-3 text-sm">
+              <div class="stat-chip">🌱 ${s.sownBy} sådda</div>
+              <div class="stat-chip">🪴 ${s.pottedBy} omskolade</div>
+              <div class="stat-chip">💔 ${s.lostBy} förlorade</div>
+            </div>
+
+            <div class="mt-3">
+              <div class="flex items-center justify-between text-xs opacity-80">
+                <span>📊 Överlevnad</span>
+                <span><strong>${s.survivalPct}%</strong></span>
+              </div>
+              <div class="w-full h-3 rounded-full mt-2" style="background: rgba(234,223,214,.65); border:1px solid rgba(234,223,214,.95)">
+                <div class="h-3 rounded-full" style="width:${clamp(s.survivalPct)}%; background: linear-gradient(90deg, rgba(169,200,178,.95), rgba(233,183,200,.75));"></div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <div class="flex items-center justify-between text-xs opacity-80">
+                <span>✨ Poäng</span>
+                <span>${s.points} / ${maxPoints}</span>
+              </div>
+              <div class="w-full h-3 rounded-full mt-2" style="background: rgba(234,223,214,.65); border:1px solid rgba(234,223,214,.95)">
+                <div class="h-3 rounded-full" style="width:${clamp((s.points/maxPoints)*100)}%; background: linear-gradient(90deg, rgba(207,200,242,.85), rgba(233,183,200,.65));"></div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        return `
+          <div class="winner-badge rounded-2xl p-4 mt-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="text-sm opacity-90">🏅 Ledare just nu: <strong>${leader.name}</strong></div>
+              <div class="text-xs opacity-80">Poäng: sådd +1 • omskolning +2 • förlust −1</div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              ${row(stats.find(s=>s.name==="Elin"))}
+              ${row(stats.find(s=>s.name==="Louise"))}
+            </div>
+          </div>
+        `;
+      })()}
+    </div>
+
+    </div>
+
+    <div class="bg-white rounded-xl shadow p-5 paper-edge">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <h3 class="font-bold text-emerald-800 text-lg">🏆 Årets favoritblomma</h3>
+        <p class="text-xs text-gray-500">Baserat på era sparade betyg</p>
+      </div>
+      ${!champ ? `
+        <p class="text-sm text-gray-600 mt-3">Inga betyg än. Sätt betyg under en sort så dyker vinnaren upp här.</p>
+      ` : `
+        <div class="winner-badge rounded-2xl p-4 mt-4">
+          <div class="flex flex-col sm:flex-row gap-4 items-start">
+            ${champImg ? `<img src="${escapeHtml(champImg)}" class="w-full sm:w-44 h-44 object-cover rounded-2xl border border-white/60" alt="Årets favorit">` : ``}
+            <div class="flex-1">
+              <div class="text-xs font-bold tracking-wide uppercase opacity-80">Vinnare</div>
+              <div class="text-3xl font-extrabold mt-1" style="font-family:Caveat, cursive">${escapeHtml(champ.v.variety_name)}</div>
+              <div class="text-sm mt-1 opacity-90">⭐ ${Number(champ.review.rating)}/5 • Odla igen: <strong>${champ.review.grow_again === "yes" ? "Ja" : champ.review.grow_again === "no" ? "Nej" : "—"}</strong></div>
+              <div class="romantic-divider my-3"></div>
+              <button class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold" onclick="showTab('overview')">📖 Se alla sorter</button>
+            </div>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+let currentTab = "home";
+
+function showTab(tab){
+  currentTab = tab;
+  const tabs = ["home","overview","calendar","varieties","register","stats"];
+  tabs.forEach(t=>{
+    const sec = document.getElementById("section-"+t);
+    if(sec) sec.classList.toggle("hidden", t!==tab);
+    const btn = document.querySelector(`button[data-tab="${t}"]`);
+    if(btn) btn.classList.toggle("active", t===tab);
+  });
+  if(tab==="home") updateHome();
+  if(tab==="overview") updateOverview();
+  if(tab==="calendar") updateCalendar();
+  if(tab==="varieties") updateVarieties();
+  if(tab==="register") updateRegister();
+  if(tab==="stats" && typeof updateStats === "function") updateStats();
+}
+
+function initTabs(){
+  document.querySelectorAll('button[data-tab]').forEach(btn=>{
+    btn.addEventListener("click", ()=> showTab(btn.getAttribute("data-tab")));
+  });
+  showTab("home");
+}
+window.addEventListener("DOMContentLoaded", initTabs);

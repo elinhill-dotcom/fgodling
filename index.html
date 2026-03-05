@@ -229,7 +229,13 @@
       z-index:-1;
       opacity:.65;
     }
-  </style>
+  
+    /* Layout tweak: hide top tabs on small screens, keep on desktop */
+    nav#top-tabs{ display:none; }
+    @media (min-width: 640px){
+      nav#top-tabs{ display:flex; }
+    }
+    </style>
 
   <style>body { box-sizing: border-box; }</style>
 
@@ -429,7 +435,7 @@
 
 
     <!-- Navigation Tabs -->
-    <nav class="bg-white shadow-sm sticky top-0 z-10 flex-shrink-0">
+    <nav id="top-tabs" class="bg-white shadow-sm sticky top-0 z-10 flex-shrink-0">
       <div class="max-w-6xl mx-auto flex overflow-x-auto">
         <button type="button" onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">📊 Överblick</button>
         <button type="button" onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button>
@@ -669,8 +675,8 @@
       </section>
     
       <!-- Overview Tab -->
-      <section id="section-overview" class="hidden fade-in space-y-6">
-        <div id="overview-content" class="space-y-6"></div>
+      <section id="section-home" class="hidden fade-in space-y-6">
+        <div id="home-content" class="space-y-6"></div>
         <div id="install-card" class="bg-white rounded-xl shadow p-5 mt-8 hidden"></div>
       </section>
 
