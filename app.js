@@ -20,8 +20,13 @@ import {
   onSnapshot, query, orderBy, serverTimestamp, getDocs, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 const DIARY_ID = "fgs-elin-louise";
 const recordsRef = collection(db, "diaries", DIARY_ID, "records");
@@ -47,6 +52,18 @@ function escapeHtml(str){
 
 function todayISO(){
   return new Date().toISOString().split("T")[0];
+}
+
+// Upload image to Firebase Storage and return download URL
+async function uploadImageToStorage(file, folder, filenameBase){
+  if(!file) return "";
+  const safeBase = (filenameBase || "image").toString().replace(/[^a-z0-9_-]/gi, "_").slice(0, 60);
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `${folder}/${safeBase}_${Date.now()}.${ext}`;
+  const r = storageRef(storage, path);
+  const bytes = await file.arrayBuffer();
+  await uploadBytes(r, new Uint8Array(bytes), { contentType: file.type || "image/jpeg" });
+  return await getDownloadURL(r);
 }
 
 // ---------- Firestore CRUD (dataSdk-liknande) ----------
@@ -238,6 +255,7 @@ function updateVarieties(){
 
   document.getElementById("varieties-list").innerHTML = varieties.map(v => `
     <div class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl shadow p-5 border-l-4 border-emerald-600">
+      ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100" alt="Bild på fröpåse">` : ``}
       <h3 class="text-lg font-bold text-emerald-900">${escapeHtml(v.variety_name)}</h3>
       <p class="text-sm text-gray-600 italic">${escapeHtml(v.english_name || "")}</p>
       <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
@@ -428,10 +446,24 @@ async function handleAddVariety(e){
   e.preventDefault();
   const id = "variety_" + Date.now();
 
+  // Optional image upload (seed packet)
+  let variety_image_url = "";
+  const fileEl = document.getElementById("variety-image");
+  const file = fileEl && fileEl.files ? fileEl.files[0] : null;
+  if(file){
+    try{
+      variety_image_url = await uploadImageToStorage(file, "variety_images", id);
+    }catch(err){
+      console.error("Variety image upload failed:", err);
+      alert("Kunde inte ladda upp bilden. Du kan spara frösorten utan bild och prova igen senare.");
+    }
+  }
+
   const payload = {
     record_type: "variety",
     variety_id: id,
     variety_name: document.getElementById("variety-name").value,
+    variety_image_url: variety_image_url,
     english_name: document.getElementById("variety-english-name").value,
     category: document.getElementById("variety-category").value,
     perennial: document.getElementById("variety-perennial").value,
@@ -446,7 +478,11 @@ async function handleAddVariety(e){
   };
 
   const res = await createRecord(payload);
-  if (res.isOk) document.getElementById("variety-form").reset();
+  if (res.isOk) {
+    document.getElementById("variety-form").reset();
+    const f = document.getElementById("variety-image");
+    if(f) f.value = "";
+  }
 }
 
 async function handleSowForm(e){
@@ -595,7 +631,10 @@ function updateOverview(){
 
     return `
       <div class="bg-white rounded-xl shadow p-5 space-y-4">
-        <h3 class="font-bold text-emerald-800 text-lg">${v.variety_name}</h3>
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <h3 class="font-bold text-emerald-800 text-lg">${v.variety_name}</h3>
+          ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" alt="Fröpåse" class="h-16 w-16 rounded-xl object-cover border border-emerald-100">` : ``}
+        </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
           <div>🌱 Sått: <strong>${totalSown}</strong></div>
@@ -625,6 +664,12 @@ function updateOverview(){
 
         <div>
           <h4 class="font-semibold text-gray-700 mb-2">⭐ Utvärdering</h4>
+          ${review && review.review_image_url ? `
+            <img src="${escapeHtml(review.review_image_url)}" alt="Bild (blomning)" class="w-full max-h-64 object-cover rounded-xl border border-emerald-100 mb-3">
+          ` : ``}
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Bild (t.ex. blomning hemma)</label>
+          <input type="file" id="review-image-${v.variety_id}" accept="image/*" class="w-full p-2 border rounded text-sm bg-white mb-3">
+
           <div class="grid sm:grid-cols-3 gap-2 text-sm">
             <input type="number" min="1" max="5" id="rating-${v.variety_id}" value="${review?.rating||''}" placeholder="Betyg 1-5" class="p-2 border rounded">
             <select id="grow-${v.variety_id}" class="p-2 border rounded">
@@ -668,6 +713,7 @@ window.saveReview = async function(varietyId, varietyName){
   try {
     const ratingInput = document.getElementById("rating-"+varietyId);
     const growInput = document.getElementById("grow-"+varietyId);
+    const fileInput = document.getElementById("review-image-"+varietyId);
 
     if(!ratingInput){
       alert("Kunde inte hitta betygsfältet.");
@@ -682,6 +728,18 @@ window.saveReview = async function(varietyId, varietyName){
       return;
     }
 
+    // Optional image upload (flower/plant photo)
+    let review_image_url = "";
+    const file = (fileInput && fileInput.files) ? fileInput.files[0] : null;
+    if(file){
+      try{
+        review_image_url = await uploadImageToStorage(file, "review_images", varietyId);
+      }catch(err){
+        console.error("Review image upload failed:", err);
+        alert("Kunde inte ladda upp bilden. Utvärderingen kan ändå sparas utan bild.");
+      }
+    }
+
     const existing = allData.find(d => d.record_type === "review" && d.variety_id === varietyId);
 
     const payload = {
@@ -693,12 +751,17 @@ window.saveReview = async function(varietyId, varietyName){
       updatedAt: new Date().toISOString()
     };
 
+    if(review_image_url){
+      payload.review_image_url = review_image_url;
+    }
+
     if(existing){
       await updateRecord(existing.__backendId, payload);
     } else {
       await createRecord(payload);
     }
 
+    if(fileInput) fileInput.value = "";
     alert("Utvärdering sparad ✅");
   } catch(error){
     console.error("Review save error:", error);

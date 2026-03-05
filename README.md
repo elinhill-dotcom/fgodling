@@ -22,3 +22,17 @@ service cloud.firestore {
 - Lägg filerna i repo-root på GitHub
 - Deploya på Vercel (Framework: Other)
 
+
+
+## Firebase Storage Rules (öppen, utan inloggning)
+I Firebase → Storage → Rules:
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
