@@ -1374,3 +1374,60 @@ function initTabs(){
   showTab("home");
 }
 window.addEventListener("DOMContentLoaded", initTabs);
+
+// ---------- Service Worker update prompt ----------
+function wireServiceWorkerUpdates(){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if(!reg) return;
+    if(reg.waiting){
+      showUpdateBanner(reg);
+    }
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      if(!newWorker) return;
+      newWorker.addEventListener('statechange', () => {
+        if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+          showUpdateBanner(reg);
+        }
+      });
+    });
+  }).catch(()=>{});
+}
+
+function showUpdateBanner(reg){
+  let bar = document.getElementById('update-banner');
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id = 'update-banner';
+    bar.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:rgba(253,251,247,.95);border:2px solid rgba(234,223,214,.95);box-shadow:0 10px 24px rgba(90,70,60,.12);border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;';
+    bar.innerHTML = `
+      <div style="font-size:14px;line-height:1.2">
+        <div style="font-weight:700">🌸 Ny uppdatering finns</div>
+        <div style="opacity:.8">Tryck för att uppdatera appen.</div>
+      </div>
+      <button id="update-now" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold">Uppdatera</button>
+    `;
+    document.body.appendChild(bar);
+  }
+  const btn = document.getElementById('update-now');
+  if(btn){
+    btn.onclick = async () => {
+      try{
+        if(reg.waiting){
+          reg.waiting.postMessage({type:'SKIP_WAITING'});
+        }
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if(refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+      }catch(e){
+        window.location.reload();
+      }
+    };
+  }
+}
+
+window.addEventListener('load', wireServiceWorkerUpdates);
