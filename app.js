@@ -256,6 +256,14 @@ function updateVarieties(){
   document.getElementById("varieties-list").innerHTML = varieties.map(v => `
     <div class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl shadow p-5 border-l-4 border-emerald-600">
       ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100" alt="Bild på fröpåse">` : ``}
+      <div class="flex gap-2 flex-wrap mb-3">
+        <input type="file" id="variety-img-${v.__backendId}" accept="image/*" class="hidden"
+          onchange="handleImageSelected('variety-img-${v.__backendId}','${v.__backendId}','variety_image_url','variety_images','${v.variety_id}')">
+        <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
+          onclick="pickImageFile('variety-img-${v.__backendId}')">🖼️ Byt bild</button>
+        ${v.variety_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
+          onclick="removeImageField(\'${v.__backendId}\',\'variety_image_url\')">🗑️ Ta bort bild</button>` : ``}
+      </div>
       <h3 class="text-lg font-bold text-emerald-900">${escapeHtml(v.variety_name)}</h3>
       <p class="text-sm text-gray-600 italic">${escapeHtml(v.english_name || "")}</p>
       <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
@@ -289,6 +297,15 @@ function updateRegister(){
     <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div>
+          ${s.sown_image_url ? `<img src="${escapeHtml(s.sown_image_url)}" alt="Bild sådd" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
+          <div class="flex gap-2 flex-wrap mb-3">
+            <input type="file" id="sown-img-${s.__backendId}" accept="image/*" class="hidden"
+              onchange="handleImageSelected('sown-img-${s.__backendId}','${s.__backendId}','sown_image_url','sown_images','${s.variety_id}')">
+            <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
+              onclick="pickImageFile('sown-img-${s.__backendId}')">🖼️ Byt bild</button>
+            ${s.sown_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
+              onclick="removeImageField(\'${s.__backendId}\',\'sown_image_url\')">🗑️ Ta bort bild</button>` : ``}
+          </div>
           <p class="font-bold text-gray-800">${escapeHtml(s.variety_name)}</p>
           <p class="text-sm text-gray-600">${Number(s.sown_count)||0} frön • ${new Date(s.sown_date).toLocaleDateString("sv-SE")} • Satt av: ${escapeHtml(s.sown_by||"")}</p>
         </div>
@@ -305,6 +322,15 @@ function updateRegister(){
     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-l-4 border-indigo-500">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div>
+          ${p.sown_image_url ? `<img src="${escapeHtml(p.sown_image_url)}" alt="Bild batch" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
+          <div class="flex gap-2 flex-wrap mb-3">
+            <input type="file" id="potted-img-${p.__backendId}" accept="image/*" class="hidden"
+              onchange="handleImageSelected('potted-img-${p.__backendId}','${p.__backendId}','sown_image_url','sown_images','${p.variety_id}')">
+            <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
+              onclick="pickImageFile('potted-img-${p.__backendId}')">🖼️ Byt bild</button>
+            ${p.sown_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
+              onclick="removeImageField(\'${p.__backendId}\',\'sown_image_url\')">🗑️ Ta bort bild</button>` : ``}
+          </div>
           <p class="font-bold text-gray-800">${escapeHtml(p.variety_name)}</p>
           <p class="text-sm text-gray-600">${Number(p.potted_count||p.sown_count||0)} plantor • ${new Date((p.potted_date||p.sown_date)).toLocaleDateString("sv-SE")} • Av: ${escapeHtml(p.potted_by||p.sown_by||"")}</p>
         </div>
@@ -491,6 +517,20 @@ async function handleSowForm(e){
   const varietyId = varietySelect.value;
   const varietyName = varietySelect.options[varietySelect.selectedIndex]?.text || "";
 
+  // Optional image upload for this sowing batch
+  let sown_image_url = "";
+  const imgEl = document.getElementById("sow-image");
+  const file = imgEl && imgEl.files ? imgEl.files[0] : null;
+  if(file){
+    try{
+      const nameBase = `sow_${varietyId}_${document.getElementById("sow-date").value || todayISO()}`;
+      sown_image_url = await uploadImageToStorage(file, "sown_images", nameBase);
+    }catch(err){
+      console.error("Sow image upload failed:", err);
+      alert("Kunde inte ladda upp bilden. Sådden kan ändå sparas utan bild.");
+    }
+  }
+
   // Batch = en sown-post (som i originalet)
   const payload = {
     record_type: "sown",
@@ -498,7 +538,8 @@ async function handleSowForm(e){
     variety_name: varietyName,
     sown_date: document.getElementById("sow-date").value,
     sown_count: parseInt(document.getElementById("sow-count").value, 10),
-    sown_by: document.getElementById("sow-by").value
+    sown_by: document.getElementById("sow-by").value,
+    sown_image_url: sown_image_url
   };
 
   const res = await createRecord(payload);
@@ -506,6 +547,8 @@ async function handleSowForm(e){
     document.getElementById("sow-form").reset();
     document.getElementById("sow-date").value = todayISO();
     document.getElementById("sow-count").value = "1";
+    const im = document.getElementById("sow-image");
+    if(im) im.value = "";
   }
 }
 
@@ -668,7 +711,19 @@ function updateOverview(){
             <img src="${escapeHtml(review.review_image_url)}" alt="Bild (blomning)" class="w-full max-h-64 object-cover rounded-xl border border-emerald-100 mb-3">
           ` : ``}
           <label class="block text-xs font-semibold text-gray-600 mb-1">Bild (t.ex. blomning hemma)</label>
-          <input type="file" id="review-image-${v.variety_id}" accept="image/*" class="w-full p-2 border rounded text-sm bg-white mb-3">
+          ${review ? `
+            <input type="file" id="review-img-${review.__backendId}" accept="image/*" class="hidden"
+              onchange="handleImageSelected(\'review-img-${review.__backendId}\',\'${review.__backendId}\',\'review_image_url\',\'review_images\',\'${v.variety_id}\')">
+            <div class="flex gap-2 flex-wrap mb-3">
+              <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
+                onclick="pickImageFile(\'review-img-${review.__backendId}\')">🖼️ Byt bild</button>
+              ${review.review_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
+                onclick="removeImageField(\'${review.__backendId}\',\'review_image_url\')">🗑️ Ta bort bild</button>` : ``}
+            </div>
+          ` : `
+            <input type="file" id="review-image-${v.variety_id}" accept="image/*" class="w-full p-2 border rounded text-sm bg-white mb-3">
+            <p class="text-xs text-gray-500 -mt-2 mb-3">Spara en utvärdering först (betyg) så kan du byta/ta bort bild senare.</p>
+          `}
 
           <div class="grid sm:grid-cols-3 gap-2 text-sm">
             <input type="number" min="1" max="5" id="rating-${v.variety_id}" value="${review?.rating||''}" placeholder="Betyg 1-5" class="p-2 border rounded">
@@ -953,5 +1008,41 @@ window.resetSystem = async function(){
   }catch(e){
     console.error(e);
     alert("Kunde inte nollställa.");
+  }
+};
+
+
+// ---------- Image replace/remove helpers ----------
+window.pickImageFile = function(inputId){
+  const el = document.getElementById(inputId);
+  if(el) el.click();
+};
+
+window.handleImageSelected = async function(inputId, backendId, fieldName, folder, filenameBase){
+  try{
+    const el = document.getElementById(inputId);
+    const file = el && el.files ? el.files[0] : null;
+    if(!file) return;
+
+    const url = await uploadImageToStorage(file, folder, filenameBase);
+    await updateRecord(backendId, { [fieldName]: url });
+
+    // reset input so same file can be picked again later
+    el.value = "";
+    alert("Bild uppdaterad ✅");
+  }catch(e){
+    console.error("Image update failed:", e);
+    alert("Kunde inte uppdatera bilden.");
+  }
+};
+
+window.removeImageField = async function(backendId, fieldName){
+  try{
+    if(!confirm("Ta bort bilden? (Filen kan ligga kvar i Storage, men visas inte längre i appen.)")) return;
+    await updateRecord(backendId, { [fieldName]: "" });
+    alert("Bild borttagen ✅");
+  }catch(e){
+    console.error("Remove image failed:", e);
+    alert("Kunde inte ta bort bilden.");
   }
 };
