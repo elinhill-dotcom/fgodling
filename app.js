@@ -34,7 +34,7 @@ const recordsRef = collection(db, "diaries", DIARY_ID, "records");
 // ---------- State ----------
 let allData = [];
 let allVarieties = [];
-let currentTab = "dashboard";
+let currentTab = "home";
 let currentMonth = new Date();
 let successChart = null;
 let categoryChart = null;
@@ -1354,19 +1354,29 @@ let currentTab = "home";
 
 function showTab(tab){
   currentTab = tab;
-  const tabs = ["home","overview","calendar","varieties","register","stats"];
+
+  const tabs = ["home","dashboard","calendar","varieties","register"];
   tabs.forEach(t=>{
     const sec = document.getElementById("section-"+t);
     if(sec) sec.classList.toggle("hidden", t!==tab);
-    const btn = document.querySelector(`button[data-tab="${t}"]`);
-    if(btn) btn.classList.toggle("active", t===tab);
+
+    const btn = document.getElementById("tab-"+t);
+    if(btn){
+      if(t===tab){
+        btn.classList.add("tab-active");
+        btn.classList.remove("text-gray-600");
+      }else{
+        btn.classList.remove("tab-active");
+        if(!btn.classList.contains("text-gray-600")) btn.classList.add("text-gray-600");
+      }
+    }
   });
+
   if(tab==="home") updateHome();
-  if(tab==="overview") updateOverview();
+  if(tab==="dashboard") updateDashboard();
   if(tab==="calendar") updateCalendar();
   if(tab==="varieties") updateVarieties();
   if(tab==="register") updateRegister();
-  if(tab==="stats" && typeof updateStats === "function") updateStats();
 }
 
 function initTabs(){
@@ -1375,7 +1385,6 @@ function initTabs(){
   });
   showTab("home");
 }
-window.addEventListener("DOMContentLoaded", initTabs);
 
 // ---------- Service Worker update prompt ----------
 function wireServiceWorkerUpdates(){
@@ -1433,3 +1442,8 @@ function showUpdateBanner(reg){
 }
 
 window.addEventListener('load', wireServiceWorkerUpdates);
+
+// ---- Tab init (v29 fix) ----
+window.addEventListener("DOMContentLoaded", () => {
+  try{ showTab("home"); }catch(e){ console.warn(e); }
+});
