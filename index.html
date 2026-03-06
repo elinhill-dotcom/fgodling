@@ -146,65 +146,32 @@
     color: #7f5b5b !important;
     border: 1px solid rgba(160,120,120,.20) !important;
   }
-</style>
 
-<style id="storybook-dashboard-theme">
-  .storybook-shell{ position:relative; overflow:hidden; }
-  .storybook-shell::before{
-    content:""; position:absolute; inset:0;
-    background:linear-gradient(135deg, rgba(244,239,232,.55), rgba(251,250,248,0));
-    pointer-events:none;
-  }
-  .storybook-title-wrap,.storybook-section,.storybook-menu,.storybook-stats,.storybook-recent-list,#person-stats{
-    position:relative; z-index:1;
-  }
-  .storybook-subtitle{ color:var(--muted); font-size:.95rem; margin:0; }
-  .storybook-title{ font-size:clamp(2rem, 4vw, 3.2rem); line-height:1.05; margin:.2rem 0 0; }
-  .storybook-menu{ display:grid; gap:12px; }
-  @media (min-width:768px){ .storybook-menu{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
-  .storybook-menu-item{
-    display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;
-    text-align:left; padding:18px 20px; border-radius:20px; border:1px solid var(--line);
-    box-shadow:var(--shadow-soft); font-weight:600; color:var(--ink); background:#fbfaf8;
-  }
-  .storybook-menu-item span{ font-size:1.35rem; line-height:1; opacity:.6; }
-  .storybook-menu-item.peach{ background:#f7efe8; }
-  .storybook-menu-item.sage{ background:#eef3ec; }
-  .storybook-menu-item.lavender{ background:#f3eff6; }
-  .storybook-section h2{ margin:0 0 14px; font-size:1.8rem; line-height:1.1; }
-  .storybook-stats{ display:grid; gap:10px; }
-  .storybook-stat-row{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:14px 16px; border-radius:18px; background:#fff; border:1px solid var(--line);
-    box-shadow:var(--shadow-soft); font-size:1rem;
-  }
-  .storybook-stat-row strong{ font-family:'Playfair Display', serif; font-size:1.5rem; color:var(--ink); }
-  .storybook-recent-list{ display:grid; gap:10px; }
-  .storybook-recent-item{
-    display:flex; align-items:center; justify-content:space-between; gap:14px;
-    padding:14px 16px; border-radius:18px; background:#fff; border:1px solid var(--line);
-    box-shadow:var(--shadow-soft);
-  }
-  .storybook-recent-item strong{ color:var(--ink); font-weight:600; }
-  .storybook-empty{
-    padding:18px; border-radius:18px; background:#fff; border:1px dashed var(--line); color:var(--muted);
-  }
-  #person-stats > div{
-    border-radius:20px !important; border:1px solid var(--line); box-shadow:var(--shadow-soft);
-    background:#fff !important; padding:18px !important;
-  }
-  #person-stats p:first-child{
-    font-family:'Playfair Display', serif; font-size:1.45rem; line-height:1.1; margin-bottom:4px;
-  }
-</style>
+  .storybook-shell { background: linear-gradient(180deg, rgba(252,249,243,.98), rgba(248,242,234,.96)); border-radius: 28px; }
+  .storybook-title-wrap { text-align: center; border-bottom: 1px dashed rgba(154,132,113,.35); padding-bottom: 12px; }
+  .storybook-subtitle { margin: 0; color: #8d7a67; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
+  .storybook-title { margin: 4px 0 0; font-size: clamp(1.7rem, 4.6vw, 2.4rem); color: #3d4a39; }
+  .storybook-menu { display: grid; gap: 10px; }
+  .storybook-menu-item { width: 100%; border: 1px solid rgba(154,132,113,.28); border-radius: 18px; padding: 14px 16px; text-align: left; display: flex; align-items: center; justify-content: space-between; font-size: 1.15rem; font-family: 'Playfair Display', serif; color: #3f453d; box-shadow: inset 0 0 0 1px rgba(255,255,255,.5); }
+  .storybook-menu-item span { font-size: 1.8rem; color: rgba(81,85,65,.65); line-height: 1; }
+  .storybook-menu-item.peach { background: linear-gradient(90deg, #f9d7d5, #f8dedb); }
+  .storybook-menu-item.sage { background: linear-gradient(90deg, #e4efcb, #e8f2d7); }
+  .storybook-menu-item.lavender { background: linear-gradient(90deg, #e7ddf5, #ede4f8); }
+  .storybook-section h2 { margin: 0 0 10px; font-size: 1.55rem; color: #4b5445; }
+  .storybook-stats, .storybook-recent-list { border: 1px dashed rgba(154,132,113,.28); border-radius: 16px; overflow: hidden; background: rgba(255,255,255,.52); }
+  .storybook-stat-row, .storybook-recent-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 12px; border-bottom: 1px dashed rgba(154,132,113,.22); font-size: 1.03rem; }
+  .storybook-stat-row:last-child, .storybook-recent-item:last-child { border-bottom: 0; }
+  .storybook-stat-row strong, .storybook-recent-item strong { font-weight: 700; color: #3c4839; }
+  .storybook-empty { padding: 12px; font-size: .95rem; color: #7a746a; }
 
+</style>
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
   <div id="app" class="w-full flex flex-col">
     <!-- Header -->
     
-<header id="appHeader" class="bg-white sticky top-0 z-20 shadow-sm">
+<header id="appHeader" class="bg-white/90 sticky top-0 z-20 shadow-sm backdrop-blur">
   <div class="max-w-6xl mx-auto px-4 py-2 flex items-center gap-3">
     <img
       src="/assets/logo.png"
@@ -213,12 +180,12 @@
       class="rounded-xl app-logo"
     />
     <div class="leading-tight">
-      <div class="text-emerald-800 font-extrabold text-base sm:text-lg">
+      <div class="text-emerald-900 font-extrabold text-lg sm:text-xl serif">
         Systrarna Hills Odlingsapp
         
       </div>
       <div class="text-gray-500 text-xs sm:text-sm">
-        Odlingsdagbok & batchar
+        En mjuk odlingsdagbok
       </div>
     </div>
   </div>

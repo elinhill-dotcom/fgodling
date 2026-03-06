@@ -146,89 +146,7 @@ function updateDashboard(){
   document.getElementById("stat-varieties").textContent = uniqueVarieties;
 
   updatePersonStats(sown, losses);
-  updateRecentActivities();
   updateCharts(sown, potted, losses);
-}
-
-
-function ensureDashboardLayout(){
-  const container = document.getElementById("home-dashboard");
-  if(!container || container.dataset.initialized === "1") return;
-
-  container.innerHTML = `
-    <div class="storybook-shell soft-card p-5 md:p-6">
-      <div class="storybook-title-wrap">
-        <p class="storybook-subtitle">Välkommen till</p>
-        <h1 class="storybook-title">Systrarna Hills Odlingsapp</h1>
-      </div>
-
-      <div class="storybook-menu mt-5">
-        <button type="button" onclick="showTab('varieties')" class="storybook-menu-item peach">🌸 Fröbibliotek <span>›</span></button>
-        <button type="button" onclick="showTab('register')" class="storybook-menu-item sage">🌱 Ny sådd <span>›</span></button>
-        <button type="button" onclick="showTab('overview')" class="storybook-menu-item lavender">🪴 Plantornas resa <span>›</span></button>
-      </div>
-
-      <div class="storybook-section mt-6">
-        <h2>Översikt just nu</h2>
-        <div class="storybook-stats">
-          <div class="storybook-stat-row"><span>🌱 Frön sådda</span><strong id="stat-total-sown">0</strong></div>
-          <div class="storybook-stat-row"><span>🪴 Plantor omskolade</span><strong id="stat-potted">0</strong></div>
-          <div class="storybook-stat-row"><span>💔 Förlorade</span><strong id="stat-lost">0</strong></div>
-          <div class="storybook-stat-row"><span>🌼 Sorter odlade</span><strong id="stat-varieties">0</strong></div>
-        </div>
-      </div>
-
-      <div class="storybook-section mt-6">
-        <h2>Senaste aktiviteter</h2>
-        <div id="dashboard-recent" class="storybook-recent-list"></div>
-      </div>
-
-      <div id="person-stats" class="grid sm:grid-cols-2 gap-3 mt-5"></div>
-    </div>
-
-    <div class="soft-card p-4 md:p-5">
-      <h2 class="serif text-2xl mb-3">Trender</h2>
-      <div class="grid gap-4 md:grid-cols-2">
-        <div class="bg-white/80 rounded-2xl p-3 border" style="border-color:var(--line)"><canvas id="successChart" class="max-h-64"></canvas></div>
-        <div class="bg-white/80 rounded-2xl p-3 border" style="border-color:var(--line)"><canvas id="weeklyLossChart" class="max-h-64"></canvas></div>
-      </div>
-      <div class="bg-white/80 rounded-2xl p-3 border mt-4" style="border-color:var(--line)"><canvas id="categoryChart" class="max-h-64"></canvas></div>
-    </div>
-  `;
-  container.dataset.initialized = "1";
-}
-
-function updateRecentActivities(){
-  const host = document.getElementById("dashboard-recent");
-  if(!host) return;
-
-  const dateOf = (event) => {
-    const candidate = event.sown_date || event.potted_date || event.loss_date || event.createdAt;
-    if(!candidate) return 0;
-    if(typeof candidate === "object" && typeof candidate.seconds === "number") return candidate.seconds * 1000;
-    const ts = new Date(candidate).getTime();
-    return Number.isNaN(ts) ? 0 : ts;
-  };
-
-  const recent = allData
-    .filter(d => d.record_type === "sown" || d.record_type === "potted" || d.record_type === "loss")
-    .sort((a, b) => dateOf(b) - dateOf(a))
-    .slice(0, 4);
-
-  if(recent.length === 0){
-    host.innerHTML = `<div class="storybook-empty">Inga aktiviteter ännu – börja med att registrera en sådd 🌱</div>`;
-    return;
-  }
-
-  host.innerHTML = recent.map((item) => {
-    if(item.record_type === "loss"){
-      return `<div class="storybook-recent-item"><span>💔 ${escapeHtml(item.variety_name || "Okänd sort")}</span><strong>${Number(item.lost_count)||0} förlorade</strong></div>`;
-    }
-    if(item.record_type === "potted"){
-      return `<div class="storybook-recent-item"><span>🪴 ${escapeHtml(item.variety_name || "Okänd sort")}</span><strong>${Number(item.potted_count || item.sown_count)||0} omskolade</strong></div>`;
-    }
-    return `<div class="storybook-recent-item"><span>🌱 ${escapeHtml(item.variety_name || "Okänd sort")}</span><strong>${Number(item.sown_count)||0} sådda</strong></div>`;
-  }).join("");
 }
 
 function updatePersonStats(sown, losses){
@@ -241,19 +159,19 @@ function updatePersonStats(sown, losses){
   const louiseSuccess = louiseSown > 0 ? Math.round(((louiseSown - louiseLost) / louiseSown) * 100) : 0;
 
   document.getElementById("person-stats").innerHTML = `
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
       <div>
-        <p class="font-semibold">👩 Elin</p>
-        <p class="text-sm muted">${elinSown} sådda • ${elinLost} förlorade</p>
+        <p class="font-semibold text-blue-900">👩 Elin</p>
+        <p class="text-sm text-blue-600">${elinSown} sådda • ${elinLost} förlorade</p>
       </div>
-      <div class="text-2xl font-bold">${elinSuccess}%</div>
+      <div class="text-2xl font-bold text-blue-600">${elinSuccess}%</div>
     </div>
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
       <div>
-        <p class="font-semibold">👩 Louise</p>
-        <p class="text-sm muted">${louiseSown} sådda • ${louiseLost} förlorade</p>
+        <p class="font-semibold text-purple-900">👩 Louise</p>
+        <p class="text-sm text-purple-600">${louiseSown} sådda • ${louiseLost} förlorade</p>
       </div>
-      <div class="text-2xl font-bold">${louiseSuccess}%</div>
+      <div class="text-2xl font-bold text-purple-600">${louiseSuccess}%</div>
     </div>
   `;
 }
