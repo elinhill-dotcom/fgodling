@@ -720,6 +720,7 @@ window.handleSowForm = handleSowForm;
 
 // ---------- Overview & Reviews ----------
 
+
 function updateOverview(){
   const varieties = allData.filter(d => d.record_type === "variety");
   const sown = allData.filter(d => d.record_type === "sown" && d.variety_id);
@@ -742,15 +743,15 @@ function updateOverview(){
     .slice(0,5);
 
   const favoritesHtml = `
-    <div class="soft-card p-6">
-      <div class="section-line serif text-3xl mb-4">🏆 Årets favoriter</div>
+    <div class="overview-favorite-card">
+      <div class="overview-block-title">🏆 Årets favoriter</div>
       ${favorites.length === 0 ? `<p class="muted">Inga betyg än.</p>` :
-        `<div class="grid md:grid-cols-2 gap-4">
+        `<div class="overview-favorite-grid">
           ${favorites.map((x,idx)=>`
-            <div class="soft-card p-4">
+            <div class="review-soft-card">
               <div class="flex items-center justify-between gap-3">
                 <div>
-                  <div class="serif text-2xl">${idx+1}. ${escapeHtml(x.v.variety_name)}</div>
+                  <div class="review-name" style="font-size:1.45rem">${idx+1}. ${escapeHtml(x.v.variety_name)}</div>
                   <div class="muted text-sm">${escapeHtml(x.v.category || "Okänd kategori")}</div>
                 </div>
                 <div class="stat-chip">★ ${x.avg.toFixed(1)}</div>
@@ -761,7 +762,7 @@ function updateOverview(){
     </div>
   `;
 
-  container.innerHTML = favoritesHtml + varieties.map(v => {
+  container.innerHTML = `<div class="overview-shell">` + favoritesHtml + varieties.map(v => {
     const vSown = sown.filter(s => s.variety_id === v.variety_id);
     const vLoss = losses.filter(l => l.variety_id === v.variety_id);
     const vComments = comments.filter(c => c.variety_id === v.variety_id);
@@ -777,12 +778,12 @@ function updateOverview(){
     const summary = yes>no ? "Vi vill gärna odla den igen." : no>yes ? "Vi satsar troligen på annat nästa år." : "Vi har ännu inget gemensamt beslut.";
 
     const reviewCard = (name, r) => `
-      <div class="review-card">
+      <div class="review-soft-card">
         <div class="flex items-center justify-between gap-3">
-          <div class="serif text-2xl">${name}</div>
+          <div class="review-name">${name}</div>
           <div class="stat-chip">${r && r.rating ? `★ ${Number(r.rating).toFixed(1)}` : "Inget betyg"}</div>
         </div>
-        ${r && r.review_image_url ? `<img src="${escapeHtml(r.review_image_url)}" class="w-full h-40 object-cover rounded-xl mt-3">` : ``}
+        ${r && r.review_image_url ? `<img src="${escapeHtml(r.review_image_url)}" alt="${name} bild">` : ``}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
           <input type="number" min="1" max="5" id="rating-${name}-${v.variety_id}" value="${r?.rating||''}" placeholder="Betyg 1-5" class="p-2 border rounded">
           <select id="grow-${name}-${v.variety_id}" class="p-2 border rounded">
@@ -801,26 +802,28 @@ function updateOverview(){
     `;
 
     return `
-      <div class="soft-card p-6 space-y-5">
-        <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div class="overview-card">
+        <div class="overview-top">
           <div>
-            <div class="serif text-3xl">${escapeHtml(v.variety_name)}</div>
-            <div class="muted mt-1">${escapeHtml(v.category || "")}</div>
+            <div class="serif text-4xl">${escapeHtml(v.variety_name)}</div>
+            <div class="overview-meta">
+              <span>${escapeHtml(v.category || "Okänd kategori")}</span>
+              <span>•</span>
+              <span>${totalSown} frön sådda</span>
+              <span>•</span>
+              <span>${totalLost} gick förlorade</span>
+              ${avg ? `<span>•</span><span>Snittbetyg ${avg.toFixed(1)}</span>` : ``}
+            </div>
           </div>
-          ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" alt="Fröpåse" class="h-20 w-20 rounded-xl object-cover border" style="border-color:var(--line)">` : ``}
+          ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" alt="Fröpåse" class="h-24 w-24 rounded-2xl object-cover border" style="border-color:var(--line)">` : ``}
         </div>
 
-        <div class="stat-line">
-          <span>${totalSown} frön sådda</span>
-          <span>•</span>
-          <span>${totalLost} gick förlorade</span>
-          ${avg ? `<span>•</span><span>Snittbetyg ${avg.toFixed(1)}</span>` : ``}
-        </div>
+        <div class="overview-divider"></div>
 
-        <div>
-          <div class="section-line serif text-2xl mb-3">💬 Kommentarer</div>
-          ${vComments.map(c=>`
-            <div class="review-card mb-2">
+        <div class="mt-5">
+          <div class="overview-block-title">💬 Kommentarer</div>
+          ${vComments.length ? vComments.map(c=>`
+            <div class="comment-entry">
               <div class="flex items-start justify-between gap-2">
                 <div class="text-xs muted">${new Date(c.createdAt?.seconds*1000 || Date.now()).toLocaleDateString("sv-SE")} • ${c.comment_by}</div>
                 <div class="flex gap-2">
@@ -830,16 +833,16 @@ function updateOverview(){
               </div>
               <div class="mt-1">${escapeHtml(c.comment_text)}</div>
             </div>
-          `).join("")}
-          <div class="flex gap-2 mt-2">
+          `).join("") : `<p class="muted">Inga kommentarer ännu.</p>`}
+          <div class="flex gap-2 mt-3">
             <input type="text" id="comment-${v.variety_id}" placeholder="Skriv kommentar..." class="flex-1 p-2 border rounded text-sm">
             <button onclick="addComment('${v.variety_id}','${escapeHtml(v.variety_name)}')" class="bg-emerald-600 text-white px-3 py-2 rounded text-sm">Spara</button>
           </div>
         </div>
 
-        <div>
-          <div class="section-line serif text-2xl mb-3">⭐ Omdöme</div>
-          <div class="review-grid">
+        <div class="mt-6">
+          <div class="overview-block-title">⭐ Omdöme</div>
+          <div class="review-grid-soft">
             ${reviewCard("Elin", rElin)}
             ${reviewCard("Louise", rLouise)}
           </div>
@@ -851,7 +854,7 @@ function updateOverview(){
         </div>
       </div>
     `;
-  }).join("");
+  }).join("") + `</div>`;
 }
 
 window.addComment = async function(varietyId, varietyName){
