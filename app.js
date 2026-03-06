@@ -36,6 +36,9 @@ let allData = [];
 let allVarieties = [];
 let currentTab = "dashboard";
 let currentMonth = new Date();
+let successChart = null;
+let categoryChart = null;
+let weeklyLossChart = null;
 
 // ---------- Utilities ----------
 function escapeHtml(str){
@@ -150,6 +153,7 @@ function updateDashboard(){
 }
 
 
+
 function ensureDashboardLayout(){
   const container = document.getElementById("home-dashboard");
   if(!container || container.dataset.initialized === "1") return;
@@ -240,7 +244,9 @@ function updatePersonStats(sown, losses){
   const elinSuccess = elinSown > 0 ? Math.round(((elinSown - elinLost) / elinSown) * 100) : 0;
   const louiseSuccess = louiseSown > 0 ? Math.round(((louiseSown - louiseLost) / louiseSown) * 100) : 0;
 
-  document.getElementById("person-stats").innerHTML = `
+  const host = document.getElementById("person-stats");
+  if(!host) return;
+  host.innerHTML = `
     <div class="flex items-center justify-between gap-4">
       <div>
         <p class="font-semibold">👩 Elin</p>
@@ -265,7 +271,11 @@ function updateCharts(sown, potted, losses){
   const elinLost = losses.filter(d => d.lost_by === "Elin").reduce((s,d)=> s + (Number(d.lost_count)||0), 0);
   const louiseLost = losses.filter(d => d.lost_by === "Louise").reduce((s,d)=> s + (Number(d.lost_count)||0), 0);
 
-  const successCtx = document.getElementById("successChart").getContext("2d");
+  const successCanvas = document.getElementById("successChart");
+  const weeklyCanvas = document.getElementById("weeklyLossChart");
+  const categoryCanvas = document.getElementById("categoryChart");
+  if(!successCanvas || !weeklyCanvas || !categoryCanvas) return;
+  const successCtx = successCanvas.getContext("2d");
   if (successChart) successChart.destroy();
   successChart = new Chart(successCtx, {
     type: "bar",
@@ -292,7 +302,7 @@ function updateCharts(sown, potted, losses){
   });
 
   const sortedWeeks = Object.keys(weeklyLosses).sort();
-  const weeklyCtx = document.getElementById("weeklyLossChart").getContext("2d");
+  const weeklyCtx = weeklyCanvas.getContext("2d");
   if (weeklyLossChart) weeklyLossChart.destroy();
   weeklyLossChart = new Chart(weeklyCtx, {
     type: "line",
@@ -311,7 +321,7 @@ function updateCharts(sown, potted, losses){
     categories[cat] = (categories[cat] || 0) + (Number(d.sown_count)||0);
   });
 
-  const categoryCtx = document.getElementById("categoryChart").getContext("2d");
+  const categoryCtx = categoryCanvas.getContext("2d");
   if (categoryChart) categoryChart.destroy();
   categoryChart = new Chart(categoryCtx, {
     type: "doughnut",
