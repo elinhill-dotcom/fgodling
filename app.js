@@ -119,8 +119,10 @@ function init(){
   if (sowDateEl) sowDateEl.value = todayISO();
 
   // Forms
-  document.getElementById("variety-form").addEventListener("submit", handleAddVariety);
-  document.getElementById("sow-form").addEventListener("submit", handleSowForm);
+  const varietyForm = document.getElementById("variety-form");
+  const sowForm = document.getElementById("sow-form");
+  if (varietyForm) varietyForm.addEventListener("submit", handleAddVariety);
+  if (sowForm) sowForm.addEventListener("submit", handleSowForm);
 }
 init();
 
@@ -568,6 +570,11 @@ window.nextMonth = function(){
 async function handleAddVariety(e){
   e.preventDefault();
   const id = "variety_" + Date.now();
+  const nameEl = document.getElementById("variety-name");
+  if(!nameEl || !nameEl.value.trim()){
+    alert("Fyll i namn på frösorten först.");
+    return;
+  }
 
   // Optional image upload (seed packet)
   let variety_image_url = "";
@@ -583,7 +590,6 @@ async function handleAddVariety(e){
   }
 
   const payload = {
-    batch_id: sowRecord.batch_id || sowRecord.__backendId,
     record_type: "variety",
     variety_id: id,
     variety_name: document.getElementById("variety-name").value,
@@ -612,6 +618,10 @@ async function handleAddVariety(e){
 async function handleSowForm(e){
   e.preventDefault();
   const varietySelect = document.getElementById("sow-variety");
+  if(!varietySelect || !varietySelect.value){
+    alert("Välj en frösort först.");
+    return;
+  }
   const varietyId = varietySelect.value;
   const varietyName = varietySelect.options[varietySelect.selectedIndex]?.text || "";
 
@@ -633,7 +643,6 @@ async function handleSowForm(e){
   const batchId = "batch_" + Date.now();
 
   const payload = {
-    batch_id: sowRecord.batch_id || sowRecord.__backendId,
     record_type: "sown",
     batch_id: batchId,
     variety_id: varietyId,
@@ -1254,3 +1263,9 @@ function renderInstallCard(installed=false){
     `;
   }
 }
+
+// ---------- Runtime safety ----------
+window.addEventListener("error", (event) => {
+  console.error("Runtime error:", event.error || event.message);
+});
+
