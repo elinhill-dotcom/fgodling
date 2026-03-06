@@ -315,6 +315,61 @@
   .batch-details.hidden{ display:none; }
 </style>
 
+
+<style id="v50-accordion-visual-fix">
+  .batch-card{
+    overflow: visible !important;
+    border-radius: 24px !important;
+  }
+  .batch-summary{
+    border-radius: 24px !important;
+    padding: 16px 18px !important;
+  }
+  .batch-details{
+    padding: 14px 18px 18px !important;
+    background: rgba(255,255,255,.82);
+    border-top: 1px solid rgba(110,139,111,.12) !important;
+  }
+  .batch-details > .pt-4{
+    padding-top: 0 !important;
+  }
+  .batch-details .grid.gap-3.md\:grid-cols-3{
+    gap: 14px !important;
+    align-items: start;
+  }
+  .batch-details .bg-white.rounded-xl{
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(34,44,34,.04);
+  }
+  .batch-details input,
+  .batch-details select,
+  .batch-details textarea{
+    min-height: 46px;
+  }
+  .batch-details textarea{
+    min-height: 74px;
+  }
+  .batch-details img{
+    border-radius: 18px !important;
+  }
+  .batch-details .flex.gap-2.flex-wrap.justify-end.mt-3{
+    margin-top: 16px !important;
+    padding-top: 4px;
+  }
+  @media (max-width: 767px){
+    .batch-card{
+      margin-bottom: 2px;
+    }
+    .batch-details{
+      padding: 12px 14px 16px !important;
+    }
+    .batch-summary-title{
+      font-size: 1.28rem !important;
+    }
+  }
+</style>
+
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
