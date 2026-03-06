@@ -16,40 +16,137 @@
 
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    * { font-family: 'Nunito', sans-serif; }
-    .tab-active { background: #2d5a27; color: white; }
-    .stat-card { animation: slideUp 0.4s ease-out; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .calendar-day { min-height: 80px; }
-    .calendar-task { font-size: 0.7rem; }
-    html, body, #app { height: 100%; }
   
-    /* Logo animation + styling */
-    /* ~168px */
-    }
-
-    
-    /* Compact sticky logo */
-    .logo-img-compact{
-      max-height: 48px;
-      width: auto;
-      object-fit: contain;
-      border-radius: 12px;
-      filter: drop-shadow(0 4px 10px rgba(4,120,87,0.25));
-    }
-    @media (min-width: 640px){
-      .logo-img-compact{ max-height: 60px; }
-    }
-    
-    /* Mobile Safari: allow normal page scroll */
-    body { overflow: auto; -webkit-overflow-scrolling: touch; }
+<style>
+  :root {
+    --bg: #ffffff;
+    --paper: #fbfaf8;
+    --paper-2:#f7f4ef;
+    --ink: #2e3d31;
+    --text: #4e5951;
+    --muted: #738074;
+    --line: rgba(110,139,111,.22);
+    --accent: #7d9a80;
+    --accent-2: #dfe9dd;
+    --shadow: 0 12px 30px rgba(34,44,34,.06);
+    --shadow-soft: 0 6px 16px rgba(34,44,34,.05);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background:
+      url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22520%22%20height%3D%22520%22%20viewBox%3D%220%200%20520%20520%22%3E%0A%3Cg%20fill%3D%22none%22%20stroke%3D%22%236e8b6f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20opacity%3D%220.25%22%3E%0A%3Cpath%20d%3D%22M36%20438c66-54%2086-125%20126-182%2038-53%2090-83%20157-97%22/%3E%0A%3Cpath%20d%3D%22M84%20480c52-46%2074-96%20109-141%2039-50%2088-73%20139-85%22/%3E%0A%3Cpath%20d%3D%22M126%20365c25-9%2038-27%2045-48%208-22%204-45-12-63%22/%3E%0A%3Cpath%20d%3D%22M260%20160c-16%2019-12%2045%207%2063%2019%2018%2046%2018%2064%202%2019-16%2022-41%2010-61-13-21-45-24-64-4%22/%3E%0A%3Cpath%20d%3D%22M334%20112c-10%2014-8%2031%206%2043%2013%2012%2031%2013%2045%202%2014-11%2016-29%207-43-9-14-32-17-45-2%22/%3E%0A%3Cpath%20d%3D%22M164%20268c-12%2015-8%2032%205%2044%2013%2012%2031%2013%2045%203%2014-11%2016-29%207-44-9-14-32-16-45-3%22/%3E%0A%3Cpath%20d%3D%22M214%20230c-18%200-32%2013-32%2030%200%2017%2014%2031%2032%2031s32-14%2032-31c0-17-14-30-32-30z%22/%3E%0A%3Cpath%20d%3D%22M364%20212c-18%200-32%2013-32%2030%200%2017%2014%2031%2032%2031s32-14%2032-31c0-17-14-30-32-30z%22/%3E%0A%3Cpath%20d%3D%22M420%2084c-66%2054-86%20125-126%20182-38%2053-90%2083-157%2097%22/%3E%0A%3Cpath%20d%3D%22M468%2040c-52%2046-74%2096-109%20141-39%2050-88%2073-139%2085%22/%3E%0A%3Cpath%20d%3D%22M336%20348c16-19%2012-45-7-63-19-18-46-18-64-2-19%2016-22%2041-10%2061%2013%2021%2045%2024%2064%204%22/%3E%0A%3Cpath%20d%3D%22M392%20300c10-14%208-31-6-43-13-12-31-13-45-2-14%2011-16%2029-7%2043%209%2014%2032%2017%2045%202%22/%3E%0A%3Cpath%20d%3D%22M244%20398c12-15%208-32-5-44-13-12-31-13-45-3-14%2011-16%2029-7%2044%209%2014%2032%2016%2045%203%22/%3E%0A%3C/g%3E%3C/svg%3E") no-repeat top -40px left -40px,
+      url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22520%22%20height%3D%22520%22%20viewBox%3D%220%200%20520%20520%22%3E%0A%3Cg%20fill%3D%22none%22%20stroke%3D%22%236e8b6f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20opacity%3D%220.25%22%3E%0A%3Cpath%20d%3D%22M36%20438c66-54%2086-125%20126-182%2038-53%2090-83%20157-97%22/%3E%0A%3Cpath%20d%3D%22M84%20480c52-46%2074-96%20109-141%2039-50%2088-73%20139-85%22/%3E%0A%3Cpath%20d%3D%22M126%20365c25-9%2038-27%2045-48%208-22%204-45-12-63%22/%3E%0A%3Cpath%20d%3D%22M260%20160c-16%2019-12%2045%207%2063%2019%2018%2046%2018%2064%202%2019-16%2022-41%2010-61-13-21-45-24-64-4%22/%3E%0A%3Cpath%20d%3D%22M334%20112c-10%2014-8%2031%206%2043%2013%2012%2031%2013%2045%202%2014-11%2016-29%207-43-9-14-32-17-45-2%22/%3E%0A%3Cpath%20d%3D%22M164%20268c-12%2015-8%2032%205%2044%2013%2012%2031%2013%2045%203%2014-11%2016-29%207-44-9-14-32-16-45-3%22/%3E%0A%3Cpath%20d%3D%22M214%20230c-18%200-32%2013-32%2030%200%2017%2014%2031%2032%2031s32-14%2032-31c0-17-14-30-32-30z%22/%3E%0A%3Cpath%20d%3D%22M364%20212c-18%200-32%2013-32%2030%200%2017%2014%2031%2032%2031s32-14%2032-31c0-17-14-30-32-30z%22/%3E%0A%3Cpath%20d%3D%22M420%2084c-66%2054-86%20125-126%20182-38%2053-90%2083-157%2097%22/%3E%0A%3Cpath%20d%3D%22M468%2040c-52%2046-74%2096-109%20141-39%2050-88%2073-139%2085%22/%3E%0A%3Cpath%20d%3D%22M336%20348c16-19%2012-45-7-63-19-18-46-18-64-2-19%2016-22%2041-10%2061%2013%2021%2045%2024%2064%204%22/%3E%0A%3Cpath%20d%3D%22M392%20300c10-14%208-31-6-43-13-12-31-13-45-2-14%2011-16%2029-7%2043%209%2014%2032%2017%2045%202%22/%3E%0A%3Cpath%20d%3D%22M244%20398c12-15%208-32-5-44-13-12-31-13-45-3-14%2011-16%2029-7%2044%209%2014%2032%2016%2045%203%22/%3E%0A%3C/g%3E%3C/svg%3E") no-repeat bottom -40px right -40px,
+      var(--bg);
+    background-size: 360px 360px, 360px 360px, auto;
+  }
+  h1,h2,h3,h4,.serif {
+    font-family: 'Playfair Display', serif;
+    color: var(--ink);
+    letter-spacing: -.01em;
+  }
+  .tab-active {
+    background: #f6f3ee !important;
+    color: var(--ink) !important;
+    border-color: rgba(110,139,111,.28) !important;
+  }
+  .fade-in { animation: fadeIn .25s ease-out; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  html, body, #app { min-height: 100%; }
+  .logo-img-compact {
+    max-height: 56px;
+    width: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    filter: drop-shadow(0 4px 10px rgba(4,120,87,0.12));
+  }
+  .app-logo { border-radius: 12px; }
+  .soft-card {
+    background: rgba(251,250,248,.92);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+  }
+  .soft-pill {
+    background: rgba(251,250,248,.96);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: var(--shadow-soft);
+  }
+  .section-line {
+    display:flex; align-items:center; gap:14px;
+    color: var(--ink);
+  }
+  .section-line::after {
+    content:""; height:1px; flex:1; background: linear-gradient(90deg, rgba(110,139,111,.35), rgba(110,139,111,.08));
+  }
+  .mini-bar { height: 12px; border-radius: 999px; background: #f1eee9; overflow:hidden; border:1px solid rgba(110,139,111,.16); }
+  .mini-bar > span { display:block; height:100%; border-radius:999px; background: linear-gradient(90deg, #dce7da, #a9bda7); }
+  .mini-bar.pink > span { background: linear-gradient(90deg, #efe0e3, #d8b6be); }
+  .stat-line { display:flex; flex-wrap:wrap; gap:10px 16px; font-size:1rem; color:var(--text); }
+  .stat-chip { padding:.45rem .8rem; border-radius:999px; background:#f8f6f1; border:1px solid rgba(110,139,111,.14); }
+  nav { background: rgba(255,255,255,.92) !important; backdrop-filter: blur(6px); }
+  nav .max-w-6xl { gap: 10px; padding: 10px 0; }
+  nav button {
+    border:1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(251,250,248,.96);
+    color: var(--ink);
+    box-shadow: var(--shadow-soft);
+  }
+  main { max-width: 980px !important; padding: 20px 16px 40px !important; }
+  .quick-btn {
+    background: #f9f7f2;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: var(--shadow-soft);
+    padding: 22px 18px;
+    text-align:center;
+    font-weight:600;
+    color: var(--ink);
+  }
+  .muted { color: var(--muted); }
+  .summary-card {
+    padding: 26px 24px;
+    text-align: center;
+  }
+  .review-grid { display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:14px; }
+  @media (min-width: 768px) {
+    .review-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  }
+  .review-card {
+    background: #fff;
+    border:1px solid var(--line);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: var(--shadow-soft);
+  }
+  .summary-note {
+    background: #f5f7f4;
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px 18px;
+  }
+  input,select,textarea {
+    border-radius: 14px !important;
+    border-color: rgba(110,139,111,.22) !important;
+    background: #fff !important;
+  }
+  button.bg-emerald-600, button.bg-emerald-700, button.bg-blue-600, button.bg-blue-700, button.bg-indigo-600, button.bg-indigo-700 {
+    background: #eef3ec !important;
+    color: var(--ink) !important;
+    border: 1px solid rgba(110,139,111,.22) !important;
+    box-shadow: var(--shadow-soft) !important;
+  }
+  button.bg-red-100, button.bg-red-200 {
+    background: #f8f3f3 !important;
+    color: #7f5b5b !important;
+    border: 1px solid rgba(160,120,120,.20) !important;
+  }
 </style>
-  <style>body { box-sizing: border-box; }</style>
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
@@ -80,10 +177,10 @@
     <!-- Navigation Tabs -->
     <nav class="bg-white shadow-sm sticky top-0 z-10 flex-shrink-0">
       <div class="max-w-6xl mx-auto flex overflow-x-auto">
-        <button type="button" onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">📊 Överblick</button>
+        <button type="button" onclick="showTab('dashboard')" id="tab-dashboard" class="tab-active flex-1 min-w-max py-3 px-4 text-sm font-semibold transition-all">🏡 Start</button>
         <button type="button" onclick="showTab('calendar')" id="tab-calendar" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📅 Kalender</button>
-        <button type="button" onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌻 Frösorter</button>
-        <button type="button" onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📝 Registrering</button>
+        <button type="button" onclick="showTab('varieties')" id="tab-varieties" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">🌼 Fröbibliotek</button>
+        <button type="button" onclick="showTab('register')" id="tab-register" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">✏️ Registrera</button>
         <button type="button" onclick="showTab('overview')" id="tab-overview" class="flex-1 min-w-max py-3 px-4 text-sm font-semibold text-gray-600 hover:bg-green-50 transition-all">📈 Översikt</button>
       </div>
     </nav>
@@ -91,59 +188,16 @@
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto w-full p-4">
       <!-- Dashboard Tab -->
-      <section id="section-dashboard" class="fade-in space-y-6">
-        <!-- Statistics Grid -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-            <div class="text-2xl font-bold text-emerald-700" id="stat-total-sown">0</div>
-            <div class="text-xs text-gray-600 mt-1">🌱 Totalt sådda</div>
-          </div>
-          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-            <div class="text-2xl font-bold text-blue-600" id="stat-potted">0</div>
-            <div class="text-xs text-gray-600 mt-1">🪴 Omskolande</div>
-          </div>
-          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-            <div class="text-2xl font-bold text-red-600" id="stat-lost">0</div>
-            <div class="text-xs text-gray-600 mt-1">💀 Förlorade</div>
-          </div>
-          <div class="stat-card bg-white rounded-xl shadow p-4 text-center">
-            <div class="text-2xl font-bold text-indigo-600" id="stat-varieties">0</div>
-            <div class="text-xs text-gray-600 mt-1">🌻 Sorter</div>
-          </div>
-        </div>
-
-        <!-- Personal Stats and Chart -->
-        <div class="grid md:grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl shadow p-5">
-            <h3 class="font-bold text-emerald-800 mb-4">👥 Per person</h3>
-            <div id="person-stats" class="space-y-3"></div>
-          </div>
-          <div class="bg-white rounded-xl shadow p-5">
-            <h3 class="font-bold text-emerald-800 mb-4">📊 Prestanda</h3>
-            <canvas id="successChart" class="max-h-64"></canvas>
-          </div>
-        </div>
-
-        <!-- Weekly Loss Statistics -->
-        <div class="grid md:grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl shadow p-5">
-            <h3 class="font-bold text-red-800 mb-4">📈 Förluster per vecka</h3>
-            <canvas id="weeklyLossChart" class="max-h-64"></canvas>
-          </div>
-          <div class="bg-white rounded-xl shadow p-5">
-            <h3 class="font-bold text-emerald-800 mb-4">🏆 Kategori-prestanda</h3>
-            <canvas id="categoryChart" class="max-h-64"></canvas>
-          </div>
-        </div>
       
-        <div style="margin-top:40px;text-align:center;">
-          <button onclick="resetSystem()" 
-          style="font-size:14px;background:#fee2e2;color:#991b1b;padding:10px 18px;border-radius:10px;border:1px solid #fecaca;">
-          ⚠️ Nollställ hela systemet
-          </button>
-        </div>
+<section id="section-dashboard" class="fade-in space-y-6">
+  <div id="home-dashboard" class="space-y-6"></div>
+  <div style="margin-top:24px;text-align:center;">
+    <button onclick="resetSystem()" style="font-size:14px;background:#f8f3f3;color:#7f5b5b;padding:10px 18px;border-radius:12px;border:1px solid rgba(160,120,120,.20);">
+      ⚠️ Nollställ hela systemet
+    </button>
+  </div>
+</section>
 
-      </section>
 
       <!-- Calendar Tab -->
       <section id="section-calendar" class="hidden fade-in">

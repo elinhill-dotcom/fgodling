@@ -36,9 +36,6 @@ let allData = [];
 let allVarieties = [];
 let currentTab = "dashboard";
 let currentMonth = new Date();
-let successChart = null;
-let categoryChart = null;
-let weeklyLossChart = null;
 
 // ---------- Utilities ----------
 function escapeHtml(str){
@@ -621,6 +618,7 @@ window.handleSowForm = handleSowForm;
 
 
 // ---------- Overview & Reviews ----------
+
 function updateOverview(){
   const varieties = allData.filter(d => d.record_type === "variety");
   const sown = allData.filter(d => d.record_type === "sown" && d.variety_id);
@@ -631,125 +629,124 @@ function updateOverview(){
   const container = document.getElementById("overview-content");
   if(!container) return;
 
-  // Årets favoriter (topplista baserad på betyg)
-  const rated = varieties
-    .map(v => ({ v, review: reviews.find(r => r.variety_id === v.variety_id) }))
-    .filter(x => x.review && Number(x.review.rating) > 0)
-    .sort((a,b)=> Number(b.review.rating) - Number(a.review.rating));
+  const avgForVariety = (varietyId) => {
+    const rs = reviews.filter(r => r.variety_id === varietyId && (r.reviewer === "Elin" || r.reviewer === "Louise"));
+    return rs.length ? rs.reduce((s,r)=>s+(Number(r.rating)||0),0)/rs.length : 0;
+  };
 
-  const top = rated.slice(0, 5);
+  const favorites = varieties
+    .map(v => ({ v, avg: avgForVariety(v.variety_id) }))
+    .filter(x => x.avg > 0)
+    .sort((a,b)=> b.avg-a.avg)
+    .slice(0,5);
 
   const favoritesHtml = `
-    <div class="bg-white rounded-xl shadow p-5">
-      <div class="flex items-center justify-between gap-3 flex-wrap">
-        <h3 class="font-bold text-emerald-800 text-lg">🏆 Årets favoriter</h3>
-        <p class="text-xs text-gray-500">Baserat på era sparade betyg</p>
-      </div>
-      ${top.length === 0 ?
-        `<p class="text-gray-500 mt-3 text-sm">Inga betyg än. Sätt betyg under en sort så dyker favoriterna upp här.</p>` :
-        `<div class="mt-4 grid gap-3 sm:grid-cols-2">
-          ${top.map((x, idx) => `
-            <div class="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100">
-              <div class="flex items-start justify-between gap-3">
+    <div class="soft-card p-6">
+      <div class="section-line serif text-3xl mb-4">🏆 Årets favoriter</div>
+      ${favorites.length === 0 ? `<p class="muted">Inga betyg än.</p>` :
+        `<div class="grid md:grid-cols-2 gap-4">
+          ${favorites.map((x,idx)=>`
+            <div class="soft-card p-4">
+              <div class="flex items-center justify-between gap-3">
                 <div>
-                  <div class="text-sm font-extrabold text-emerald-900">${idx+1}. ${x.v.variety_name}</div>
-                  <div class="text-xs text-gray-600">${x.v.category || "Okänd kategori"}</div>
+                  <div class="serif text-2xl">${idx+1}. ${escapeHtml(x.v.variety_name)}</div>
+                  <div class="muted text-sm">${escapeHtml(x.v.category || "Okänd kategori")}</div>
                 </div>
-                <div class="text-sm font-extrabold text-indigo-700 bg-white/80 px-3 py-1 rounded-full border border-indigo-100">
-                  ⭐ ${Number(x.review.rating)}/5
-                </div>
-              </div>
-              <div class="mt-2 text-xs text-gray-600">
-                Odla igen: <span class="font-semibold">${x.review.grow_again === "yes" ? "Ja" : x.review.grow_again === "no" ? "Nej" : "—"}</span>
+                <div class="stat-chip">★ ${x.avg.toFixed(1)}</div>
               </div>
             </div>
-          `).join("")}
-        </div>`
-      }
+          `).join('')}
+        </div>`}
     </div>
   `;
 
   container.innerHTML = favoritesHtml + varieties.map(v => {
     const vSown = sown.filter(s => s.variety_id === v.variety_id);
-  renderInstallCard();
-    const vPotted = potted.filter(p => p.variety_id === v.variety_id);
     const vLoss = losses.filter(l => l.variety_id === v.variety_id);
     const vComments = comments.filter(c => c.variety_id === v.variety_id);
-    const review = reviews.find(r => r.variety_id === v.variety_id);
+    const vReviews = reviews.filter(r => r.variety_id === v.variety_id && (r.reviewer === "Elin" || r.reviewer === "Louise"));
+    const rElin = vReviews.find(r => r.reviewer === "Elin");
+    const rLouise = vReviews.find(r => r.reviewer === "Louise");
 
     const totalSown = vSown.reduce((s,d)=> s + (Number(d.sown_count)||0),0);
-    const totalPotted = vPotted.reduce((s,d)=> s + (Number(d.potted_count || d.sown_count)||0),0);
     const totalLost = vLoss.reduce((s,d)=> s + (Number(d.lost_count)||0),0);
-    const survival = totalSown > 0 ? Math.round(((totalSown-totalLost)/totalSown)*100) : 0;
-    const pottingRate = totalSown > 0 ? Math.round((totalPotted/totalSown)*100) : 0;
+    const avg = vReviews.length ? vReviews.reduce((s,r)=> s + (Number(r.rating)||0),0)/vReviews.length : 0;
+    const yes = vReviews.filter(r=>r.grow_again==="yes").length;
+    const no = vReviews.filter(r=>r.grow_again==="no").length;
+    const summary = yes>no ? "Vi vill gärna odla den igen." : no>yes ? "Vi satsar troligen på annat nästa år." : "Vi har ännu inget gemensamt beslut.";
+
+    const reviewCard = (name, r) => `
+      <div class="review-card">
+        <div class="flex items-center justify-between gap-3">
+          <div class="serif text-2xl">${name}</div>
+          <div class="stat-chip">${r && r.rating ? `★ ${Number(r.rating).toFixed(1)}` : "Inget betyg"}</div>
+        </div>
+        ${r && r.review_image_url ? `<img src="${escapeHtml(r.review_image_url)}" class="w-full h-40 object-cover rounded-xl mt-3">` : ``}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
+          <input type="number" min="1" max="5" id="rating-${name}-${v.variety_id}" value="${r?.rating||''}" placeholder="Betyg 1-5" class="p-2 border rounded">
+          <select id="grow-${name}-${v.variety_id}" class="p-2 border rounded">
+            <option value="">Odla igen?</option>
+            <option value="yes" ${(r?.grow_again==="yes")?"selected":""}>Ja</option>
+            <option value="no" ${(r?.grow_again==="no")?"selected":""}>Nej</option>
+          </select>
+          <input type="file" id="image-${name}-${v.variety_id}" accept="image/*" class="p-2 border rounded text-sm bg-white">
+        </div>
+        <textarea id="note-${name}-${v.variety_id}" placeholder="Din kommentar om blomman..." class="mt-2 w-full p-2 border rounded text-sm">${r?.note || ''}</textarea>
+        <div class="flex gap-2 flex-wrap mt-2">
+          <button onclick="saveReviewFor('${name}','${v.variety_id}','${escapeHtml(v.variety_name)}')" class="bg-emerald-600 text-white px-3 py-2 rounded text-sm">Spara ${name}</button>
+          ${r ? `<button onclick="deleteReview('${r.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded text-sm">Ta bort</button>` : ``}
+        </div>
+      </div>
+    `;
 
     return `
-      <div class="bg-white rounded-xl shadow p-5 space-y-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <h3 class="font-bold text-emerald-800 text-lg">${v.variety_name}</h3>
-          ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" alt="Fröpåse" class="h-16 w-16 rounded-xl object-cover border border-emerald-100">` : ``}
+      <div class="soft-card p-6 space-y-5">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div class="serif text-3xl">${escapeHtml(v.variety_name)}</div>
+            <div class="muted mt-1">${escapeHtml(v.category || "")}</div>
+          </div>
+          ${v.variety_image_url ? `<img src="${escapeHtml(v.variety_image_url)}" alt="Fröpåse" class="h-20 w-20 rounded-xl object-cover border" style="border-color:var(--line)">` : ``}
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
-          <div>🌱 Sått: <strong>${totalSown}</strong></div>
-          <div>🪴 Omskolat: <strong>${totalPotted}</strong></div>
-          <div>📈 Omskolning: <strong>${pottingRate}%</strong></div>
-          <div>💀 Förlorat: <strong>${totalLost}</strong></div>
-          <div>📊 Överlevnad: <strong>${survival}%</strong></div>
+        <div class="stat-line">
+          <span>${totalSown} frön sådda</span>
+          <span>•</span>
+          <span>${totalLost} gick förlorade</span>
+          ${avg ? `<span>•</span><span>Snittbetyg ${avg.toFixed(1)}</span>` : ``}
         </div>
 
         <div>
-          <h4 class="font-semibold text-gray-700 mb-2">💬 Kommentarer</h4>
+          <div class="section-line serif text-2xl mb-3">💬 Kommentarer</div>
           ${vComments.map(c=>`
-            <div class="text-sm bg-gray-50 p-2 rounded mb-2">
+            <div class="review-card mb-2">
               <div class="flex items-start justify-between gap-2">
-                <div class="text-xs text-gray-500">${new Date(c.createdAt?.seconds*1000 || Date.now()).toLocaleDateString("sv-SE")} • ${c.comment_by}</div>
+                <div class="text-xs muted">${new Date(c.createdAt?.seconds*1000 || Date.now()).toLocaleDateString("sv-SE")} • ${c.comment_by}</div>
                 <div class="flex gap-2">
-                  <button class="text-xs text-gray-800 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded" onclick="editEvent('${c.__backendId}')">Redigera</button>
-                  <button class="text-xs text-red-700 bg-red-100 hover:bg-red-200 px-2 py-1 rounded" onclick="deleteComment('${c.__backendId}')">Ta bort</button>
+                  <button class="text-xs px-2 py-1 rounded" onclick="editEvent('${c.__backendId}')" style="background:#f5f2ee;border:1px solid var(--line)">Redigera</button>
+                  <button class="text-xs px-2 py-1 rounded" onclick="deleteComment('${c.__backendId}')" style="background:#f8f3f3;border:1px solid rgba(160,120,120,.20)">Ta bort</button>
                 </div>
               </div>
-              ${c.comment_text}
+              <div class="mt-1">${escapeHtml(c.comment_text)}</div>
             </div>
           `).join("")}
           <div class="flex gap-2 mt-2">
             <input type="text" id="comment-${v.variety_id}" placeholder="Skriv kommentar..." class="flex-1 p-2 border rounded text-sm">
-            <button onclick="addComment('${v.variety_id}','${v.variety_name}')" class="bg-emerald-600 text-white px-3 py-2 rounded text-sm">Spara</button>
+            <button onclick="addComment('${v.variety_id}','${escapeHtml(v.variety_name)}')" class="bg-emerald-600 text-white px-3 py-2 rounded text-sm">Spara</button>
           </div>
         </div>
 
         <div>
-          <h4 class="font-semibold text-gray-700 mb-2">⭐ Utvärdering</h4>
-          ${review && review.review_image_url ? `
-            <img src="${escapeHtml(review.review_image_url)}" alt="Bild (blomning)" class="w-full max-h-64 object-cover rounded-xl border border-emerald-100 mb-3">
-          ` : ``}
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Bild (t.ex. blomning hemma)</label>
-          ${review ? `
-            <input type="file" id="review-img-${review.__backendId}" accept="image/*" class="hidden"
-              onchange="handleImageSelected(\'review-img-${review.__backendId}\',\'${review.__backendId}\',\'review_image_url\',\'review_images\',\'${v.variety_id}\')">
-            <div class="flex gap-2 flex-wrap mb-3">
-              <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
-                onclick="pickImageFile(\'review-img-${review.__backendId}\')">🖼️ Byt bild</button>
-              ${review.review_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
-                onclick="removeImageField(\'${review.__backendId}\',\'review_image_url\')">🗑️ Ta bort bild</button>` : ``}
-            </div>
-          ` : `
-            <input type="file" id="review-image-${v.variety_id}" accept="image/*" class="w-full p-2 border rounded text-sm bg-white mb-3">
-            <p class="text-xs text-gray-500 -mt-2 mb-3">Spara en utvärdering först (betyg) så kan du byta/ta bort bild senare.</p>
-          `}
-
-          <div class="grid sm:grid-cols-3 gap-2 text-sm">
-            <input type="number" min="1" max="5" id="rating-${v.variety_id}" value="${review?.rating||''}" placeholder="Betyg 1-5" class="p-2 border rounded">
-            <select id="grow-${v.variety_id}" class="p-2 border rounded">
-              <option value="">Odla igen?</option>
-              <option value="yes" ${review?.grow_again==="yes"?"selected":""}>Ja</option>
-              <option value="no" ${review?.grow_again==="no"?"selected":""}>Nej</option>
-            </select>
-            <div class="flex gap-2 flex-wrap">
-              <button onclick="saveReview('${v.variety_id}','${v.variety_name}')" class="bg-indigo-600 text-white px-3 py-2 rounded">Spara</button>
-              ${review ? `<button onclick="deleteReview('${review.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded">Ta bort</button>` : ``}
-            </div>
+          <div class="section-line serif text-2xl mb-3">⭐ Omdöme</div>
+          <div class="review-grid">
+            ${reviewCard("Elin", rElin)}
+            ${reviewCard("Louise", rLouise)}
           </div>
+          ${(rElin || rLouise) ? `
+            <div class="summary-note mt-4">
+              <div class="serif text-xl">Samlat omdöme</div>
+              <div class="mt-2">${summary}</div>
+            </div>` : ``}
         </div>
       </div>
     `;
@@ -777,52 +774,45 @@ window.addComment = async function(varietyId, varietyName){
   }
 };
 
-window.saveReview = async function(varietyId, varietyName){
+
+window.saveReviewFor = async function(reviewer, varietyId, varietyName){
   try {
-    const ratingInput = document.getElementById("rating-"+varietyId);
-    const growInput = document.getElementById("grow-"+varietyId);
-    const fileInput = document.getElementById("review-image-"+varietyId);
+    const ratingInput = document.getElementById(`rating-${reviewer}-${varietyId}`);
+    const growInput = document.getElementById(`grow-${reviewer}-${varietyId}`);
+    const noteInput = document.getElementById(`note-${reviewer}-${varietyId}`);
+    const fileInput = document.getElementById(`image-${reviewer}-${varietyId}`);
 
-    if(!ratingInput){
-      alert("Kunde inte hitta betygsfältet.");
-      return;
-    }
-
-    const rating = parseInt(ratingInput.value, 10);
+    const rating = parseInt(ratingInput?.value || "", 10);
     const grow = growInput ? growInput.value : "";
+    const note = noteInput ? noteInput.value : "";
 
     if(!rating || rating < 1 || rating > 5){
       alert("Ange betyg 1–5");
       return;
     }
 
-    // Optional image upload (flower/plant photo)
     let review_image_url = "";
     const file = (fileInput && fileInput.files) ? fileInput.files[0] : null;
     if(file){
       try{
-        review_image_url = await uploadImageToStorage(file, "review_images", varietyId);
+        review_image_url = await uploadImageToStorage(file, "review_images", `${varietyId}_${reviewer}`);
       }catch(err){
         console.error("Review image upload failed:", err);
-        alert("Kunde inte ladda upp bilden. Utvärderingen kan ändå sparas utan bild.");
+        alert("Kunde inte ladda upp bilden. Omdömet kan ändå sparas utan bild.");
       }
     }
 
-    const existing = allData.find(d => d.record_type === "review" && d.variety_id === varietyId);
-
+    const existing = allData.find(d => d.record_type === "review" && d.variety_id === varietyId && d.reviewer === reviewer);
     const payload = {
-    batch_id: sowRecord.batch_id || sowRecord.__backendId,
       record_type: "review",
       variety_id: varietyId,
       variety_name: varietyName,
-      rating: rating,
+      reviewer,
+      rating,
       grow_again: grow || "",
-      updatedAt: new Date().toISOString()
+      note: note || ""
     };
-
-    if(review_image_url){
-      payload.review_image_url = review_image_url;
-    }
+    if(review_image_url) payload.review_image_url = review_image_url;
 
     if(existing){
       await updateRecord(existing.__backendId, payload);
@@ -831,13 +821,12 @@ window.saveReview = async function(varietyId, varietyName){
     }
 
     if(fileInput) fileInput.value = "";
-    alert("Utvärdering sparad ✅");
+    alert(`Omdöme sparat för ${reviewer} ✅`);
   } catch(error){
     console.error("Review save error:", error);
-    alert("Något gick fel när utvärderingen sparades.");
+    alert("Något gick fel när omdömet sparades.");
   }
 };
-
 
 // Extend calendar logic with plant-out dates
 function getPlantTasks(person, days){
