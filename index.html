@@ -67,6 +67,108 @@
     .muted{color:var(--muted);}
   </style>
 
+
+  <style id="bw-theme">
+    :root{
+      --bg:#f6f4f1;
+      --paper:#fbfaf8;
+      --ink:#1f1f1f;
+      --muted:#5a5a5a;
+      --line:rgba(31,31,31,.18);
+      --shadow:0 10px 26px rgba(0,0,0,.08);
+      --shadow-soft:0 6px 14px rgba(0,0,0,.06);
+    }
+
+    body{
+      background:
+        url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22520%22%20height%3D%22520%22%20viewBox%3D%220%200%20520%20520%22%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%231f1f1f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20opacity%3D%220.22%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M30%20420c70-60%2080-120%20120-170%2045-55%2095-70%20150-80%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M60%20460c60-55%2070-110%20110-155%2042-47%2092-62%20142-72%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M260%20170c-14%2018-10%2040%206%2055%2016%2015%2039%2016%2056%202%2017-14%2020-36%209-54-12-18-40-21-57-3%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M332%20118c-10%2014-7%2030%205%2041%2012%2011%2029%2012%2042%202%2013-10%2015-27%207-40-9-13-30-15-44-3%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M148%20270c-10%2014-7%2030%205%2041%2012%2011%2029%2012%2042%202%2013-10%2015-27%207-40-9-13-30-15-44-3%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M210%20230c-18%200-30%2013-30%2028%200%2016%2013%2028%2030%2028%2018%200%2031-12%2031-28%200-15-13-28-31-28z%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M356%20210c-18%200-30%2013-30%2028%200%2016%2013%2028%2030%2028%2018%200%2031-12%2031-28%200-15-13-28-31-28z%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M92%20356c22-6%2032-22%2035-40%204-20-1-40-16-54%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M420%2092c-70%2060-80%20120-120%20170-45%2055-95%2070-150%2080%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M460%2060c-60%2055-70%20110-110%20155-42%2047-92%2062-142%2072%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M338%20350c14-18%2010-40-6-55-16-15-39-16-56-2-17%2014-20%2036-9%2054%2012%2018%2040%2021%2057%203%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M392%20302c10-14%207-30-5-41-12-11-29-12-42-2-13%2010-15%2027-7%2040%209%2013%2030%2015%2044%203%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M246%20398c10-14%207-30-5-41-12-11-29-12-42-2-13%2010-15%2027-7%2040%209%2013%2030%2015%2044%203%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E") no-repeat top -40px left -40px,
+        url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22520%22%20height%3D%22520%22%20viewBox%3D%220%200%20520%20520%22%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22%231f1f1f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20opacity%3D%220.22%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M30%20420c70-60%2080-120%20120-170%2045-55%2095-70%20150-80%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M60%20460c60-55%2070-110%20110-155%2042-47%2092-62%20142-72%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M260%20170c-14%2018-10%2040%206%2055%2016%2015%2039%2016%2056%202%2017-14%2020-36%209-54-12-18-40-21-57-3%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M332%20118c-10%2014-7%2030%205%2041%2012%2011%2029%2012%2042%202%2013-10%2015-27%207-40-9-13-30-15-44-3%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M148%20270c-10%2014-7%2030%205%2041%2012%2011%2029%2012%2042%202%2013-10%2015-27%207-40-9-13-30-15-44-3%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M210%20230c-18%200-30%2013-30%2028%200%2016%2013%2028%2030%2028%2018%200%2031-12%2031-28%200-15-13-28-31-28z%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M356%20210c-18%200-30%2013-30%2028%200%2016%2013%2028%2030%2028%2018%200%2031-12%2031-28%200-15-13-28-31-28z%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M92%20356c22-6%2032-22%2035-40%204-20-1-40-16-54%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M420%2092c-70%2060-80%20120-120%20170-45%2055-95%2070-150%2080%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M460%2060c-60%2055-70%20110-110%20155-42%2047-92%2062-142%2072%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M338%20350c14-18%2010-40-6-55-16-15-39-16-56-2-17%2014-20%2036-9%2054%2012%2018%2040%2021%2057%203%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M392%20302c10-14%207-30-5-41-12-11-29-12-42-2-13%2010-15%2027-7%2040%209%2013%2030%2015%2044%203%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M246%20398c10-14%207-30-5-41-12-11-29-12-42-2-13%2010-15%2027-7%2040%209%2013%2030%2015%2044%203%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E") no-repeat bottom -40px right -40px,
+        radial-gradient(900px 650px at 15% 0%, rgba(0,0,0,.04), transparent 60%),
+        radial-gradient(900px 650px at 85% 100%, rgba(0,0,0,.035), transparent 60%),
+        var(--bg) !important;
+      background-size: 360px 360px, 360px 360px, auto, auto, auto;
+      color: var(--ink) !important;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif !important;
+    }
+
+    /* Header/logo */
+    header img, .app-logo img, #logo img {
+      filter: grayscale(100%) contrast(1.05);
+    }
+
+    .app-title, h1, h2, h3 {
+      color: var(--ink) !important;
+      font-family: 'Playfair Display', Georgia, serif !important;
+      letter-spacing: .2px;
+    }
+    .app-subtitle {
+      color: rgba(31,31,31,.62) !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+
+    /* Cards */
+    .bg-white.rounded-xl.shadow,
+    .bg-white.rounded-xl.shadow-sm,
+    .bg-white.rounded-xl.shadow-md,
+    .bg-white.rounded-xl.shadow-lg,
+    .bg-white.rounded-xl.shadow-xl,
+    .bg-white.rounded-2xl.shadow,
+    .bg-white.rounded-2xl.shadow-lg{
+      background: var(--paper) !important;
+      border: 1px solid var(--line) !important;
+      box-shadow: var(--shadow) !important;
+    }
+
+    /* Tabs and buttons monochrome */
+    nav button{
+      background: rgba(251,250,248,.85) !important;
+      border: 1px solid var(--line) !important;
+      box-shadow: var(--shadow-soft) !important;
+      color: var(--ink) !important;
+    }
+    nav button.active, nav button.bg-emerald-800{
+      background: rgba(31,31,31,.06) !important;
+      border-color: rgba(31,31,31,.28) !important;
+      color: var(--ink) !important;
+    }
+
+    button.bg-emerald-600, button.bg-emerald-700,
+    button.bg-blue-600, button.bg-blue-700,
+    button.bg-indigo-600, button.bg-indigo-700{
+      background: rgba(31,31,31,.10) !important;
+      border: 1px solid rgba(31,31,31,.30) !important;
+      color: var(--ink) !important;
+      box-shadow: var(--shadow-soft) !important;
+    }
+    button.bg-emerald-600:hover, button.bg-blue-600:hover, button.bg-indigo-600:hover{
+      background: rgba(31,31,31,.14) !important;
+    }
+
+    /* Inputs */
+    input, select, textarea{
+      background: rgba(251,250,248,.92) !important;
+      border: 1px solid rgba(31,31,31,.22) !important;
+      color: var(--ink) !important;
+    }
+
+    /* Progress bars etc */
+    .winner-badge{
+      background: rgba(31,31,31,.05) !important;
+      border: 1px solid rgba(31,31,31,.20) !important;
+    }
+    .stat-chip{
+      background: rgba(31,31,31,.04) !important;
+      border: 1px solid rgba(31,31,31,.16) !important;
+      color: var(--ink) !important;
+    }
+
+    /* Make emojis/icons a bit calmer */
+    .text-emerald-800, .text-emerald-700, .text-emerald-600,
+    .text-green-700, .text-green-600, .text-blue-700, .text-indigo-700{
+      color: var(--ink) !important;
+    }
+  </style>
+
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
