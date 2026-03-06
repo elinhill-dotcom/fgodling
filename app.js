@@ -36,6 +36,7 @@ let allData = [];
 let allVarieties = [];
 let currentTab = "dashboard";
 let currentMonth = new Date();
+let openRegisterBatches = new Set();
 let successChart = null;
 let categoryChart = null;
 let weeklyLossChart = null;
@@ -397,6 +398,7 @@ function getRemainingForSown(rec){
 
 // ---------- Register tab ----------
 
+
 function updateRegister(){
   const sown = allData
     .filter(d => d.record_type === "sown")
@@ -417,13 +419,30 @@ function updateRegister(){
 
   sownList.innerHTML = `
     <div class="text-sm font-bold text-gray-800 mb-2">🌱 Sådda batchar</div>
-  ` + (sown.length === 0 ? `<p class="text-gray-500 text-sm">Inga sådda batchar ännu.</p>` : sown.map(s => {
+  ` + (sown.length === 0 ? `<p class="text-gray-500 text-sm">Inga sådda batchar ännu.</p>` : `<div class="batch-list">` + sown.map(s => {
     const remaining = getRemainingForSown(s);
     const usage = getBatchUsage(s.batch_id || s.__backendId);
+    const isOpen = openRegisterBatches.has(s.__backendId);
     return `
-      <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
-        <div class="flex flex-col gap-3">
-          <div>
+      <div class="batch-card">
+        <button type="button" class="batch-summary" onclick="toggleRegisterBatch('${s.__backendId}')">
+          <div class="batch-summary-left">
+            <div class="batch-summary-title">${escapeHtml(s.variety_name)}</div>
+            <div class="batch-summary-meta">
+              <span>${Number(s.sown_count)||0} sådda</span>
+              <span>•</span>
+              <span>${new Date(s.sown_date).toLocaleDateString("sv-SE")}</span>
+              <span>•</span>
+              <span>${escapeHtml(s.sown_by||"")}</span>
+              <span>•</span>
+              <span>Kvar: ${remaining}</span>
+            </div>
+          </div>
+          <div class="batch-toggle">${isOpen ? "−" : "+"}</div>
+        </button>
+
+        <div class="batch-details ${isOpen ? "" : "hidden"}">
+          <div class="pt-4">
             ${s.sown_image_url ? `<img src="${escapeHtml(s.sown_image_url)}" alt="Bild sådd" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
             <div class="flex gap-2 flex-wrap mb-3">
               <input type="file" id="sown-img-${s.__backendId}" accept="image/*" class="hidden"
@@ -433,68 +452,66 @@ function updateRegister(){
               ${s.sown_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
                 onclick="removeImageField('${s.__backendId}','sown_image_url')">🗑️ Ta bort bild</button>` : ``}
             </div>
-            <p class="font-bold text-gray-800">${escapeHtml(s.variety_name)}</p>
-            <p class="text-sm text-gray-600">${Number(s.sown_count)||0} frön • ${new Date(s.sown_date).toLocaleDateString("sv-SE")} • Sått av: ${escapeHtml(s.sown_by||"")}</p>
-            <p class="text-sm text-gray-700 mt-1">Kvar i batchen: <strong>${remaining}</strong> • Omskolat: ${usage.potted} • Utplanterat: ${usage.planted} • Förlorat: ${usage.lost}</p>
-          </div>
+            <p class="text-sm text-gray-700 mb-3">Omskolat: ${usage.potted} • Utplanterat: ${usage.planted} • Förlorat: ${usage.lost}</p>
 
-          <div class="grid gap-3 md:grid-cols-3">
-            <div class="bg-white rounded-xl p-3 border border-blue-100">
-              <p class="font-semibold text-blue-900 mb-2">🪴 Omskola från batch</p>
-              <div class="grid gap-2">
-                <input type="number" min="1" max="${remaining}" value="${remaining > 0 ? 1 : 0}" id="pot-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
-                <input type="date" id="pot-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
-                <select id="pot-by-${s.__backendId}" class="p-2 border rounded">
-                  <option value="Elin">Elin</option>
-                  <option value="Louise">Louise</option>
-                </select>
-                <button type="button" onclick="registerPotting('${s.__backendId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🪴 Omskola</button>
+            <div class="grid gap-3 md:grid-cols-3">
+              <div class="bg-white rounded-xl p-3 border border-blue-100">
+                <p class="font-semibold text-blue-900 mb-2">🪴 Omskola från batch</p>
+                <div class="grid gap-2">
+                  <input type="number" min="1" max="${remaining}" value="${remaining > 0 ? 1 : 0}" id="pot-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
+                  <input type="date" id="pot-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
+                  <select id="pot-by-${s.__backendId}" class="p-2 border rounded">
+                    <option value="Elin">Elin</option>
+                    <option value="Louise">Louise</option>
+                  </select>
+                  <button type="button" onclick="registerPotting('${s.__backendId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🪴 Omskola</button>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-emerald-100">
+                <p class="font-semibold text-emerald-900 mb-2">🌿 Plantera ut</p>
+                <div class="grid gap-2">
+                  <input type="number" min="1" max="${remaining}" value="${remaining > 0 ? 1 : 0}" id="plant-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
+                  <input type="date" id="plant-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
+                  <select id="plant-by-${s.__backendId}" class="p-2 border rounded">
+                    <option value="Elin">Elin</option>
+                    <option value="Louise">Louise</option>
+                  </select>
+                  <input type="text" id="plant-garden-${s.__backendId}" class="p-2 border rounded" placeholder="Vems trädgård?">
+                  <input type="text" id="plant-location-${s.__backendId}" class="p-2 border rounded" placeholder="Plats i trädgården">
+                  <textarea id="plant-note-${s.__backendId}" class="p-2 border rounded text-sm" rows="2" placeholder="Anteckning"></textarea>
+                  <input type="file" id="plant-image-${s.__backendId}" accept="image/*" class="p-2 border rounded text-sm bg-white">
+                  <button type="button" onclick="registerPlantOut('${s.__backendId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🌿 Plantera ut</button>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-red-100">
+                <p class="font-semibold text-red-900 mb-2">💀 Förlust från batch</p>
+                <div class="grid gap-2">
+                  <input type="number" min="0" max="${remaining}" value="0" id="loss-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
+                  <input type="date" id="loss-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
+                  <select id="loss-stage-${s.__backendId}" class="p-2 border rounded">
+                    <option value="">Välj läge</option>
+                    <option>Grodd</option>
+                    <option>Spirad</option>
+                    <option>Blad</option>
+                    <option>Omskolad</option>
+                    <option>Växande</option>
+                  </select>
+                  <button type="button" onclick="registerLoss('${s.__backendId}', '${escapeHtml(s.sown_by||"")}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all">💀 Registrera förlust</button>
+                </div>
               </div>
             </div>
 
-            <div class="bg-white rounded-xl p-3 border border-emerald-100">
-              <p class="font-semibold text-emerald-900 mb-2">🌿 Plantera ut</p>
-              <div class="grid gap-2">
-                <input type="number" min="1" max="${remaining}" value="${remaining > 0 ? 1 : 0}" id="plant-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
-                <input type="date" id="plant-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
-                <select id="plant-by-${s.__backendId}" class="p-2 border rounded">
-                  <option value="Elin">Elin</option>
-                  <option value="Louise">Louise</option>
-                </select>
-                <input type="text" id="plant-garden-${s.__backendId}" class="p-2 border rounded" placeholder="Vems trädgård? ex. Elins trädgård">
-                <input type="text" id="plant-location-${s.__backendId}" class="p-2 border rounded" placeholder="Plats, ex. söderrabatten">
-                <textarea id="plant-note-${s.__backendId}" class="p-2 border rounded text-sm" rows="2" placeholder="Anteckning"></textarea>
-                <input type="file" id="plant-image-${s.__backendId}" accept="image/*" class="p-2 border rounded text-sm bg-white">
-                <button type="button" onclick="registerPlantOut('${s.__backendId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🌿 Plantera ut</button>
-              </div>
+            <div class="flex gap-2 flex-wrap justify-end mt-3">
+              <button type="button" onclick="editEvent('${s.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera batch</button>
+              <button type="button" onclick="deleteEvent('${s.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort batch</button>
             </div>
-
-            <div class="bg-white rounded-xl p-3 border border-red-100">
-              <p class="font-semibold text-red-900 mb-2">💀 Förlust från batch</p>
-              <div class="grid gap-2">
-                <input type="number" min="0" max="${remaining}" value="0" id="loss-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
-                <input type="date" id="loss-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
-                <select id="loss-stage-${s.__backendId}" class="p-2 border rounded">
-                  <option value="">Välj läge</option>
-                  <option>Grodd</option>
-                  <option>Spirad</option>
-                  <option>Blad</option>
-                  <option>Omskolad</option>
-                  <option>Växande</option>
-                </select>
-                <button type="button" onclick="registerLoss('${s.__backendId}', '${escapeHtml(s.sown_by||"")}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all">💀 Registrera förlust</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex gap-2 flex-wrap justify-end">
-            <button type="button" onclick="editEvent('${s.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera batch</button>
-            <button type="button" onclick="deleteEvent('${s.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort batch</button>
           </div>
         </div>
       </div>
     `;
-  }).join(""));
+  }).join("") + `</div>`);
 
   lossFormList.innerHTML = `
     <div class="text-sm text-gray-600">
@@ -1471,3 +1488,13 @@ function renderInstallCard(installed=false){
     `;
   }
 }
+
+
+window.toggleRegisterBatch = function(batchKey){
+  if(openRegisterBatches.has(batchKey)){
+    openRegisterBatches.delete(batchKey);
+  }else{
+    openRegisterBatches.add(batchKey);
+  }
+  updateRegister();
+};
