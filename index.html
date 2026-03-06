@@ -254,6 +254,46 @@
   }
 </style>
 
+
+<style id="v46-bg-override">
+  html, body, #app {
+    background: #ffffff !important;
+    min-height: 100%;
+  }
+  body {
+    background-image:
+      linear-gradient(180deg, #ffffff 0%, #fbfcfa 55%, #ffffff 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+    background-attachment: scroll !important;
+  }
+  main,
+  #section-dashboard,
+  #section-overview,
+  #section-varieties,
+  #section-register,
+  #section-calendar,
+  #home-dashboard,
+  .overview-shell {
+    background: transparent !important;
+    background-image: none !important;
+  }
+  main::before, main::after,
+  #section-dashboard::before, #section-dashboard::after,
+  #home-dashboard::before, #home-dashboard::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+  }
+  .storybook-shell,
+  .overview-card,
+  .overview-favorite-card,
+  .soft-card,
+  .review-soft-card {
+    background: rgba(251,250,248,.96) !important;
+  }
+</style>
+
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
