@@ -269,16 +269,13 @@ function updateCharts(sown, potted, losses){
   const weeklyCanvas = document.getElementById("weeklyLossChart");
   const categoryCanvas = document.getElementById("categoryChart");
   if(!successCanvas || !weeklyCanvas || !categoryCanvas) return;
+
   // Success chart
   const elinSown = sown.filter(d => (d.sown_by||"").includes("Elin")).reduce((s,d)=> s + (Number(d.sown_count)||0), 0);
   const louiseSown = sown.filter(d => (d.sown_by||"").includes("Louise")).reduce((s,d)=> s + (Number(d.sown_count)||0), 0);
   const elinLost = losses.filter(d => d.lost_by === "Elin").reduce((s,d)=> s + (Number(d.lost_count)||0), 0);
   const louiseLost = losses.filter(d => d.lost_by === "Louise").reduce((s,d)=> s + (Number(d.lost_count)||0), 0);
 
-  const successCanvas = document.getElementById("successChart");
-  const weeklyCanvas = document.getElementById("weeklyLossChart");
-  const categoryCanvas = document.getElementById("categoryChart");
-  if(!successCanvas || !weeklyCanvas || !categoryCanvas) return;
   const successCtx = successCanvas.getContext("2d");
   if (successChart) successChart.destroy();
   successChart = new Chart(successCtx, {
