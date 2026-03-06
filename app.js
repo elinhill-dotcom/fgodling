@@ -134,6 +134,8 @@ function updateUI(){
 }
 
 function updateDashboard(){
+  ensureDashboardLayout();
+
   const sown = allData.filter(d => d.record_type === "sown" && d.variety_id);
   const potted = allData.filter(d => d.record_type === "potted");
   const losses = allData.filter(d => d.record_type === "loss");
@@ -143,12 +145,18 @@ function updateDashboard(){
   const totalLost = losses.reduce((sum, d) => sum + (Number(d.lost_count)||0), 0);
   const uniqueVarieties = new Set(sown.map(d => d.variety_id)).size;
 
-  document.getElementById("stat-total-sown").textContent = totalSown;
-  document.getElementById("stat-potted").textContent = totalPotted;
-  document.getElementById("stat-lost").textContent = totalLost;
-  document.getElementById("stat-varieties").textContent = uniqueVarieties;
+  const statTotalSown = document.getElementById("stat-total-sown");
+  const statPotted = document.getElementById("stat-potted");
+  const statLost = document.getElementById("stat-lost");
+  const statVarieties = document.getElementById("stat-varieties");
+
+  if(statTotalSown) statTotalSown.textContent = totalSown;
+  if(statPotted) statPotted.textContent = totalPotted;
+  if(statLost) statLost.textContent = totalLost;
+  if(statVarieties) statVarieties.textContent = uniqueVarieties;
 
   updatePersonStats(sown, losses);
+  if (typeof updateRecentActivities === "function") updateRecentActivities();
   updateCharts(sown, potted, losses);
 }
 
