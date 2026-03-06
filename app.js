@@ -164,7 +164,7 @@ function updateDashboard(){
 
 function ensureDashboardLayout(){
   const container = document.getElementById("home-dashboard");
-  if(!container || container.dataset.initialized === "1") return;
+  if(!container) return;
 
   container.innerHTML = `
     <div class="storybook-shell soft-card p-5 md:p-6">
@@ -206,7 +206,6 @@ function ensureDashboardLayout(){
       <div class="bg-white/80 rounded-2xl p-3 border mt-4" style="border-color:var(--line)"><canvas id="categoryChart" class="max-h-64"></canvas></div>
     </div>
   `;
-  container.dataset.initialized = "1";
 }
 
 function updateRecentActivities(){
@@ -242,7 +241,6 @@ function updateRecentActivities(){
   }).join("");
 }
 
-
 function updatePersonStats(sown, losses){
   const elinSown = sown.filter(d => (d.sown_by||"").includes("Elin")).reduce((s,d)=> s + (Number(d.sown_count)||0), 0);
   const louiseSown = sown.filter(d => (d.sown_by||"").includes("Louise")).reduce((s,d)=> s + (Number(d.sown_count)||0), 0);
@@ -252,9 +250,10 @@ function updatePersonStats(sown, losses){
   const elinSuccess = elinSown > 0 ? Math.round(((elinSown - elinLost) / elinSown) * 100) : 0;
   const louiseSuccess = louiseSown > 0 ? Math.round(((louiseSown - louiseLost) / louiseSown) * 100) : 0;
 
-  const host = document.getElementById("person-stats");
-  if(!host) return;
-  host.innerHTML = `
+  const personStatsEl = document.getElementById("person-stats");
+  if(!personStatsEl) return;
+
+  personStatsEl.innerHTML = `
     <div class="flex items-center justify-between gap-4">
       <div>
         <p class="font-semibold">👩 Elin</p>
