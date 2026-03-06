@@ -377,104 +377,172 @@ function updateVarieties(){
   `).join("");
 }
 
+
+function getBatchUsage(batchId){
+  const potted = allData.filter(d => d.record_type === "potted" && d.batch_id === batchId)
+    .reduce((sum,d)=> sum + (Number(d.potted_count || d.sown_count)||0), 0);
+  const planted = allData.filter(d => d.record_type === "planted_out" && d.batch_id === batchId)
+    .reduce((sum,d)=> sum + (Number(d.planted_out_count)||0), 0);
+  const lost = allData.filter(d => d.record_type === "loss" && d.batch_id === batchId)
+    .reduce((sum,d)=> sum + (Number(d.lost_count)||0), 0);
+  return { potted, planted, lost, used: potted + planted + lost };
+}
+
+function getRemainingForSown(rec){
+  const total = Number(rec.sown_count)||0;
+  const usage = getBatchUsage(rec.batch_id || rec.__backendId);
+  return Math.max(0, total - usage.used);
+}
+
+
 // ---------- Register tab ----------
+
 function updateRegister(){
   const sown = allData
     .filter(d => d.record_type === "sown")
     .sort((a,b)=> new Date(b.sown_date) - new Date(a.sown_date));
 
   const losses = allData.filter(d => d.record_type === "loss");
-
-  // Potting list
   const pottedBatches = allData
     .filter(d => d.record_type === "potted")
     .sort((a,b)=> new Date((b.potted_date||b.sown_date||"")) - new Date((a.potted_date||a.sown_date||"")));
+  const plantedOutBatches = allData
+    .filter(d => d.record_type === "planted_out")
+    .sort((a,b)=> new Date((b.planted_out_date||"")) - new Date((a.planted_out_date||"")));
 
-  document.getElementById("sown-list").innerHTML = `
+  const sownList = document.getElementById("sown-list");
+  const lossFormList = document.getElementById("loss-form-list");
+  const lossHistory = document.getElementById("loss-history");
+  if(!sownList || !lossFormList || !lossHistory) return;
+
+  sownList.innerHTML = `
     <div class="text-sm font-bold text-gray-800 mb-2">🌱 Sådda batchar</div>
-  ` + (sown.length === 0 ? `<p class="text-gray-500 text-sm">Inga sådda batchar ännu.</p>` : sown.map(s => `
-    <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-        <div>
-          ${s.sown_image_url ? `<img src="${escapeHtml(s.sown_image_url)}" alt="Bild sådd" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
-          <div class="flex gap-2 flex-wrap mb-3">
-            <input type="file" id="sown-img-${s.__backendId}" accept="image/*" class="hidden"
-              onchange="handleImageSelected('sown-img-${s.__backendId}','${s.__backendId}','sown_image_url','sown_images','${s.variety_id}')">
-            <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
-              onclick="pickImageFile('sown-img-${s.__backendId}')">🖼️ Byt bild</button>
-            ${s.sown_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
-              onclick="removeImageField(\'${s.__backendId}\',\'sown_image_url\')">🗑️ Ta bort bild</button>` : ``}
+  ` + (sown.length === 0 ? `<p class="text-gray-500 text-sm">Inga sådda batchar ännu.</p>` : sown.map(s => {
+    const remaining = getRemainingForSown(s);
+    const usage = getBatchUsage(s.batch_id || s.__backendId);
+    return `
+      <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
+        <div class="flex flex-col gap-3">
+          <div>
+            ${s.sown_image_url ? `<img src="${escapeHtml(s.sown_image_url)}" alt="Bild sådd" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
+            <div class="flex gap-2 flex-wrap mb-3">
+              <input type="file" id="sown-img-${s.__backendId}" accept="image/*" class="hidden"
+                onchange="handleImageSelected('sown-img-${s.__backendId}','${s.__backendId}','sown_image_url','sown_images','${s.variety_id}')">
+              <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
+                onclick="pickImageFile('sown-img-${s.__backendId}')">🖼️ Byt bild</button>
+              ${s.sown_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
+                onclick="removeImageField('${s.__backendId}','sown_image_url')">🗑️ Ta bort bild</button>` : ``}
+            </div>
+            <p class="font-bold text-gray-800">${escapeHtml(s.variety_name)}</p>
+            <p class="text-sm text-gray-600">${Number(s.sown_count)||0} frön • ${new Date(s.sown_date).toLocaleDateString("sv-SE")} • Sått av: ${escapeHtml(s.sown_by||"")}</p>
+            <p class="text-sm text-gray-700 mt-1">Kvar i batchen: <strong>${remaining}</strong> • Omskolat: ${usage.potted} • Utplanterat: ${usage.planted} • Förlorat: ${usage.lost}</p>
           </div>
-          <p class="font-bold text-gray-800">${escapeHtml(s.variety_name)}</p>
-          <p class="text-sm text-gray-600">${Number(s.sown_count)||0} frön • ${new Date(s.sown_date).toLocaleDateString("sv-SE")} • Satt av: ${escapeHtml(s.sown_by||"")}</p>
-        </div>
-        <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
-          <button type="button" onclick="registerPotting('${s.__backendId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🪴 Omskola</button>
-          <button type="button" onclick="editEvent('${s.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera</button>
-          <button type="button" onclick="deleteEvent('${s.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort</button>
-        </div>
-      </div>
-    </div>
-  `).join("")) + `
-    <div class="mt-6 text-sm font-bold text-gray-800 mb-2">🪴 Omskolade batchar</div>
-  ` + (pottedBatches.length === 0 ? `<p class="text-gray-500 text-sm">Inga omskolade batchar ännu.</p>` : pottedBatches.map(p => `
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-l-4 border-indigo-500">
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-        <div>
-          ${p.sown_image_url ? `<img src="${escapeHtml(p.sown_image_url)}" alt="Bild batch" class="w-full h-40 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
-          <div class="flex gap-2 flex-wrap mb-3">
-            <input type="file" id="potted-img-${p.__backendId}" accept="image/*" class="hidden"
-              onchange="handleImageSelected('potted-img-${p.__backendId}','${p.__backendId}','sown_image_url','sown_images','${p.variety_id}')">
-            <button type="button" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded"
-              onclick="pickImageFile('potted-img-${p.__backendId}')">🖼️ Byt bild</button>
-            ${p.sown_image_url ? `<button type="button" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-3 py-2 rounded"
-              onclick="removeImageField(\'${p.__backendId}\',\'sown_image_url\')">🗑️ Ta bort bild</button>` : ``}
+
+          <div class="grid gap-3 md:grid-cols-3">
+            <div class="bg-white rounded-xl p-3 border border-blue-100">
+              <p class="font-semibold text-blue-900 mb-2">🪴 Omskola från batch</p>
+              <div class="grid gap-2">
+                <input type="number" min="1" max="${remaining}" value="${remaining > 0 ? 1 : 0}" id="pot-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
+                <input type="date" id="pot-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
+                <select id="pot-by-${s.__backendId}" class="p-2 border rounded">
+                  <option value="Elin">Elin</option>
+                  <option value="Louise">Louise</option>
+                </select>
+                <button type="button" onclick="registerPotting('${s.__backendId}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🪴 Omskola</button>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-3 border border-emerald-100">
+              <p class="font-semibold text-emerald-900 mb-2">🌿 Plantera ut</p>
+              <div class="grid gap-2">
+                <input type="number" min="1" max="${remaining}" value="${remaining > 0 ? 1 : 0}" id="plant-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
+                <input type="date" id="plant-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
+                <select id="plant-by-${s.__backendId}" class="p-2 border rounded">
+                  <option value="Elin">Elin</option>
+                  <option value="Louise">Louise</option>
+                </select>
+                <input type="text" id="plant-garden-${s.__backendId}" class="p-2 border rounded" placeholder="Vems trädgård? ex. Elins trädgård">
+                <input type="text" id="plant-location-${s.__backendId}" class="p-2 border rounded" placeholder="Plats, ex. söderrabatten">
+                <textarea id="plant-note-${s.__backendId}" class="p-2 border rounded text-sm" rows="2" placeholder="Anteckning"></textarea>
+                <input type="file" id="plant-image-${s.__backendId}" accept="image/*" class="p-2 border rounded text-sm bg-white">
+                <button type="button" onclick="registerPlantOut('${s.__backendId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">🌿 Plantera ut</button>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-3 border border-red-100">
+              <p class="font-semibold text-red-900 mb-2">💀 Förlust från batch</p>
+              <div class="grid gap-2">
+                <input type="number" min="0" max="${remaining}" value="0" id="loss-count-${s.__backendId}" class="p-2 border rounded" placeholder="Antal">
+                <input type="date" id="loss-date-${s.__backendId}" value="${todayISO()}" class="p-2 border rounded">
+                <select id="loss-stage-${s.__backendId}" class="p-2 border rounded">
+                  <option value="">Välj läge</option>
+                  <option>Grodd</option>
+                  <option>Spirad</option>
+                  <option>Blad</option>
+                  <option>Omskolad</option>
+                  <option>Växande</option>
+                </select>
+                <button type="button" onclick="registerLoss('${s.__backendId}', '${escapeHtml(s.sown_by||"")}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all">💀 Registrera förlust</button>
+              </div>
+            </div>
           </div>
-          <p class="font-bold text-gray-800">${escapeHtml(p.variety_name)}</p>
-          <p class="text-sm text-gray-600">${Number(p.potted_count||p.sown_count||0)} plantor • ${new Date((p.potted_date||p.sown_date)).toLocaleDateString("sv-SE")} • Av: ${escapeHtml(p.potted_by||p.sown_by||"")}</p>
-        </div>
-        <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
-          <button type="button" onclick="revertPotting('${p.__backendId}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all">↩️ Ångra</button>
-          <button type="button" onclick="editEvent('${p.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera</button>
-          <button type="button" onclick="deleteEvent('${p.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort</button>
+
+          <div class="flex gap-2 flex-wrap justify-end">
+            <button type="button" onclick="editEvent('${s.__backendId}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">✏️ Redigera batch</button>
+            <button type="button" onclick="deleteEvent('${s.__backendId}')" class="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-lg text-sm font-semibold transition-all">🗑️ Ta bort batch</button>
+          </div>
         </div>
       </div>
-    </div>
-  `).join(""));
+    `;
+  }).join(""));
 
-  // Loss forms
-  document.getElementById("loss-form-list").innerHTML = sown.map(s => `
-    <div class="bg-white rounded-xl p-4 border-2 border-red-200">
-      <p class="font-bold text-gray-800 mb-2">${escapeHtml(s.variety_name)} (${Number(s.sown_count)||0} frön sådda)</p>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Antal döda</label>
-          <input type="number" id="loss-count-${s.__backendId}" min="0" max="${Number(s.sown_count)||0}" value="0" class="w-full p-2 border border-red-300 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Datum</label>
-          <input type="date" id="loss-date-${s.__backendId}" class="w-full p-2 border border-red-300 rounded-lg text-sm" value="${todayISO()}">
-        </div>
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Läge</label>
-          <select id="loss-stage-${s.__backendId}" class="w-full p-2 border border-red-300 rounded-lg text-sm">
-            <option value="">Välj</option>
-            <option value="Grodd">Grodd</option>
-            <option value="Spirad">Spirad</option>
-            <option value="Blad">Blad</option>
-            <option value="Omskold">Omskold</option>
-            <option value="Växande">Växande</option>
-          </select>
+  lossFormList.innerHTML = `
+    <div class="text-sm text-gray-600">
+      Här kan ni dela upp samma batch mellan olika händelser. En batch kan både omskolas, planteras ut i Elins eller Louises trädgård och delvis gå förlorad.
+    </div>
+  `;
+
+  const historyHtml = [];
+  if (pottedBatches.length) {
+    historyHtml.push(`<div class="mt-2 text-sm font-bold text-gray-800 mb-2">🪴 Omskolningar</div>`);
+    historyHtml.push(pottedBatches.map(p => `
+      <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-600">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+          <div>
+            <p class="font-bold text-blue-900">${escapeHtml(p.variety_name)}</p>
+            <p class="text-sm text-blue-700">${Number(p.potted_count||0)} plantor • ${new Date(p.potted_date).toLocaleDateString("sv-SE")} • ${escapeHtml(p.potted_by||"")}</p>
+          </div>
+          <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
+            <button type="button" onclick="editEvent('${p.__backendId}')" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition-all">✏️ Redigera</button>
+            <button type="button" onclick="deleteEvent('${p.__backendId}')" class="text-xs bg-red-200 hover:bg-red-300 text-red-800 px-3 py-2 rounded transition-all">🗑️ Ta bort</button>
+          </div>
         </div>
       </div>
-      <button type="button" onclick="registerLoss('${s.__backendId}', '${escapeHtml(s.sown_by||"")}')" class="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all">💀 Registrera förlust</button>
-    </div>
-  `).join("");
+    `).join(""));
+  }
 
-  // Loss history
-  document.getElementById("loss-history").innerHTML = losses.length === 0
-    ? "<p class='text-gray-500'>Inga förluster registrerade</p>"
-    : losses
+  if (plantedOutBatches.length) {
+    historyHtml.push(`<div class="mt-4 text-sm font-bold text-gray-800 mb-2">🌿 Utplanteringar</div>`);
+    historyHtml.push(plantedOutBatches.map(p => `
+      <div class="bg-emerald-50 rounded-lg p-4 border-l-4 border-emerald-600">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+          <div>
+            ${p.planted_out_image_url ? `<img src="${escapeHtml(p.planted_out_image_url)}" alt="Utplanterad" class="w-full h-36 object-cover rounded-xl mb-3 border border-emerald-100">` : ``}
+            <p class="font-bold text-emerald-900">${escapeHtml(p.variety_name)}</p>
+            <p class="text-sm text-emerald-700">${Number(p.planted_out_count||0)} utplanterade • ${new Date(p.planted_out_date).toLocaleDateString("sv-SE")} • ${escapeHtml(p.planted_out_by||"")}</p>
+            <p class="text-sm text-gray-700">${escapeHtml(p.garden_name||"")} • ${escapeHtml(p.location_name||"")}</p>
+            ${p.location_note ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(p.location_note)}</p>` : ``}
+          </div>
+          <div class="w-full sm:w-auto flex gap-2 flex-wrap justify-end">
+            <button type="button" onclick="editEvent('${p.__backendId}')" class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition-all">✏️ Redigera</button>
+            <button type="button" onclick="deleteEvent('${p.__backendId}')" class="text-xs bg-red-200 hover:bg-red-300 text-red-800 px-3 py-2 rounded transition-all">🗑️ Ta bort</button>
+          </div>
+        </div>
+      </div>
+    `).join(""));
+  }
+
+  historyHtml.push(losses.length === 0 ? `<p class='text-gray-500'>Inga förluster registrerade</p>` : `<div class="mt-4 text-sm font-bold text-gray-800 mb-2">💀 Förluster</div>` + losses
       .sort((a,b)=> new Date(b.loss_date) - new Date(a.loss_date))
       .map(l => `
         <div class="bg-red-50 rounded-lg p-4 border-l-4 border-red-600">
@@ -489,7 +557,9 @@ function updateRegister(){
             </div>
           </div>
         </div>
-      `).join("");
+      `).join(""));
+
+  lossHistory.innerHTML = historyHtml.join("");
 }
 
 // ---------- Calendar ----------
@@ -520,8 +590,8 @@ function updateCalendar(){
 
   document.getElementById("calendar-grid").innerHTML = html;
 
-  const elinTasks = [...getTasks("Elin", 30), ...getPlantTasks("Elin", 30)];
-  const louiseTasks = [...getTasks("Louise", 30), ...getPlantTasks("Louise", 30)];
+  const elinTasks = [...getTasks("Elin", 30), ...getPlantTasks("Elin", 30), ...getPlantOutLogs("Elin", 30)];
+  const louiseTasks = [...getTasks("Louise", 30), ...getPlantTasks("Louise", 30), ...getPlantOutLogs("Louise", 30)];
 
   document.getElementById("elin-tasks").innerHTML = elinTasks.length === 0
     ? "<p class='text-gray-500'>Inga uppgifter</p>"
@@ -553,6 +623,25 @@ function getTasks(person, days){
     }
   });
 
+  return tasks.sort((a,b)=> new Date(a.date) - new Date(b.date));
+}
+
+
+function getPlantOutLogs(person, days){
+  const tasks = [];
+  const today = new Date();
+  const plantings = allData.filter(d => d.record_type === "planted_out" && d.planted_out_by === person);
+  plantings.forEach(p => {
+    if(!p.planted_out_date) return;
+    const date = new Date(p.planted_out_date);
+    const diff = Math.floor((today - date) / (1000*60*60*24));
+    if(diff >= 0 && diff <= days){
+      tasks.push({
+        date: date.toLocaleDateString("sv-SE"),
+        text: `🌿 Utplanterat ${p.variety_name} i ${p.location_name || p.garden_name || "trädgården"}`
+      });
+    }
+  });
   return tasks.sort((a,b)=> new Date(a.date) - new Date(b.date));
 }
 
@@ -670,31 +759,98 @@ window.deleteVariety = async function(varietyId){
   await deleteRecord(rec.__backendId);
 };
 
+
 window.registerPotting = async function(sownBackendId){
   const rec = allData.find(d => d.__backendId === sownBackendId);
   if (!rec) return;
-  // Precis som din Canva-kod: ändra record_type till potted
-  await updateRecord(sownBackendId, {
+  const remaining = getRemainingForSown(rec);
+  const count = parseInt(document.getElementById(`pot-count-${sownBackendId}`)?.value || "0", 10);
+  const date = document.getElementById(`pot-date-${sownBackendId}`)?.value || todayISO();
+  const by = document.getElementById(`pot-by-${sownBackendId}`)?.value || rec.sown_by || "";
+
+  if (!count || count < 1) return alert("Ange antal att omskola.");
+  if (count > remaining) return alert("Du kan inte omskola fler än som finns kvar i batchen.");
+
+  const payload = {
     record_type: "potted",
     batch_id: rec.batch_id || rec.__backendId,
-    potted_date: new Date().toISOString(),
-    potted_count: rec.sown_count,
-    potted_by: rec.sown_by
-  });
+    variety_id: rec.variety_id,
+    variety_name: rec.variety_name,
+    potted_date: date + "T00:00:00Z",
+    potted_count: count,
+    potted_by: by,
+    source_sown_backend_id: sownBackendId
+  };
+  await createRecord(payload);
+  document.getElementById(`pot-count-${sownBackendId}`).value = "1";
+};
+
+window.registerPlantOut = async function(sownBackendId){
+  const rec = allData.find(d => d.__backendId === sownBackendId);
+  if (!rec) return;
+  const remaining = getRemainingForSown(rec);
+
+  const count = parseInt(document.getElementById(`plant-count-${sownBackendId}`)?.value || "0", 10);
+  const date = document.getElementById(`plant-date-${sownBackendId}`)?.value || todayISO();
+  const by = document.getElementById(`plant-by-${sownBackendId}`)?.value || "";
+  const garden = document.getElementById(`plant-garden-${sownBackendId}`)?.value || "";
+  const location = document.getElementById(`plant-location-${sownBackendId}`)?.value || "";
+  const note = document.getElementById(`plant-note-${sownBackendId}`)?.value || "";
+  const fileInput = document.getElementById(`plant-image-${sownBackendId}`);
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if (!count || count < 1) return alert("Ange antal att plantera ut.");
+  if (count > remaining) return alert("Du kan inte plantera ut fler än som finns kvar i batchen.");
+  if (!by) return alert("Välj vem som planterade ut.");
+  if (!garden.trim()) return alert("Skriv vems trädgård det gäller.");
+  if (!location.trim()) return alert("Skriv var i trädgården plantan hamnade.");
+
+  let planted_out_image_url = "";
+  if(file){
+    try{
+      planted_out_image_url = await uploadImageToStorage(file, "plantout_images", `${rec.variety_id}_${by}_${date}`);
+    }catch(err){
+      console.error("Plant out image upload failed:", err);
+      alert("Kunde inte ladda upp bilden. Utplanteringen sparas utan bild.");
+    }
+  }
+
+  const payload = {
+    record_type: "planted_out",
+    batch_id: rec.batch_id || rec.__backendId,
+    variety_id: rec.variety_id,
+    variety_name: rec.variety_name,
+    planted_out_date: date + "T00:00:00Z",
+    planted_out_count: count,
+    planted_out_by: by,
+    garden_name: garden,
+    location_name: location,
+    location_note: note,
+    planted_out_image_url,
+    source_sown_backend_id: sownBackendId
+  };
+  await createRecord(payload);
+  if(fileInput) fileInput.value = "";
+  document.getElementById(`plant-count-${sownBackendId}`).value = "1";
 };
 
 window.registerLoss = async function(sowId, sowedBy){
+  const sowRecord = allData.find(d => d.__backendId === sowId);
+  if (!sowRecord) return;
+
+  const remaining = getRemainingForSown(sowRecord);
   const count = parseInt(document.getElementById(`loss-count-${sowId}`).value || "0", 10);
-  const date = document.getElementById(`loss-date-${sowId}`).value;
+  const date = document.getElementById(`loss-date-${sowId}`).value || todayISO();
   const stage = document.getElementById(`loss-stage-${sowId}`).value;
 
-  if (!count || count === 0){
+  if (!count || count < 1){
     alert("Ange antal döda frön");
     return;
   }
-
-  const sowRecord = allData.find(d => d.__backendId === sowId);
-  if (!sowRecord) return;
+  if (count > remaining){
+    alert("Du kan inte registrera fler förluster än som finns kvar i batchen.");
+    return;
+  }
 
   const payload = {
     batch_id: sowRecord.batch_id || sowRecord.__backendId,
@@ -721,6 +877,13 @@ window.deleteLoss = async function(lossBackendId){
   await deleteRecord(lossBackendId);
 };
 
+window.deleteLoss = async function(lossBackendId){
+  const rec = allData.find(d => d.__backendId === lossBackendId);
+  if (!rec) return;
+  if (!confirm("Ta bort förlusten?")) return;
+  await deleteRecord(lossBackendId);
+};
+
 // expose for form handlers
 window.handleAddVariety = handleAddVariety;
 window.handleSowForm = handleSowForm;
@@ -733,6 +896,8 @@ function updateOverview(){
   const varieties = allData.filter(d => d.record_type === "variety");
   const sown = allData.filter(d => d.record_type === "sown" && d.variety_id);
   const losses = allData.filter(d => d.record_type === "loss");
+  const plantedOut = allData.filter(d => d.record_type === "planted_out");
+  const potted = allData.filter(d => d.record_type === "potted");
   const comments = allData.filter(d => d.record_type === "comment");
   const reviews = allData.filter(d => d.record_type === "review");
 
@@ -773,6 +938,8 @@ function updateOverview(){
   container.innerHTML = `<div class="overview-shell">` + favoritesHtml + varieties.map(v => {
     const vSown = sown.filter(s => s.variety_id === v.variety_id);
     const vLoss = losses.filter(l => l.variety_id === v.variety_id);
+    const vPotted = potted.filter(p => p.variety_id === v.variety_id);
+    const vPlantedOut = plantedOut.filter(p => p.variety_id === v.variety_id);
     const vComments = comments.filter(c => c.variety_id === v.variety_id);
     const vReviews = reviews.filter(r => r.variety_id === v.variety_id && (r.reviewer === "Elin" || r.reviewer === "Louise"));
     const rElin = vReviews.find(r => r.reviewer === "Elin");
@@ -780,6 +947,8 @@ function updateOverview(){
 
     const totalSown = vSown.reduce((s,d)=> s + (Number(d.sown_count)||0),0);
     const totalLost = vLoss.reduce((s,d)=> s + (Number(d.lost_count)||0),0);
+    const totalPotted = vPotted.reduce((s,d)=> s + (Number(d.potted_count)||0),0);
+    const totalPlanted = vPlantedOut.reduce((s,d)=> s + (Number(d.planted_out_count)||0),0);
     const avg = vReviews.length ? vReviews.reduce((s,r)=> s + (Number(r.rating)||0),0)/vReviews.length : 0;
     const yes = vReviews.filter(r=>r.grow_again==="yes").length;
     const no = vReviews.filter(r=>r.grow_again==="no").length;
@@ -819,6 +988,10 @@ function updateOverview(){
               <span>•</span>
               <span>${totalSown} frön sådda</span>
               <span>•</span>
+              <span>${totalPotted} omskolade</span>
+              <span>•</span>
+              <span>${totalPlanted} utplanterade</span>
+              <span>•</span>
               <span>${totalLost} gick förlorade</span>
               ${avg ? `<span>•</span><span>Snittbetyg ${avg.toFixed(1)}</span>` : ``}
             </div>
@@ -846,6 +1019,28 @@ function updateOverview(){
             <input type="text" id="comment-${v.variety_id}" placeholder="Skriv kommentar..." class="flex-1 p-2 border rounded text-sm">
             <button onclick="addComment('${v.variety_id}','${escapeHtml(v.variety_name)}')" class="bg-emerald-600 text-white px-3 py-2 rounded text-sm">Spara</button>
           </div>
+        </div>
+
+
+        <div class="mt-6">
+          <div class="overview-block-title">🌿 Utplanteringar</div>
+          ${vPlantedOut.length ? `<div class="review-grid-soft">
+            ${vPlantedOut.map(p => `
+              <div class="review-soft-card">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="review-name" style="font-size:1.5rem">${escapeHtml(p.planted_out_by || "")}</div>
+                  <div class="stat-chip">${Number(p.planted_out_count)||0} st</div>
+                </div>
+                ${p.planted_out_image_url ? `<img src="${escapeHtml(p.planted_out_image_url)}" alt="Utplanterad bild">` : ``}
+                <div class="mt-3 text-sm text-gray-700">
+                  <div><strong>Trädgård:</strong> ${escapeHtml(p.garden_name || "")}</div>
+                  <div><strong>Plats:</strong> ${escapeHtml(p.location_name || "")}</div>
+                  <div><strong>Datum:</strong> ${new Date(p.planted_out_date).toLocaleDateString("sv-SE")}</div>
+                  ${p.location_note ? `<div class="mt-2">${escapeHtml(p.location_note)}</div>` : ``}
+                </div>
+              </div>
+            `).join("")}
+          </div>` : `<p class="muted">Ingen utplantering registrerad ännu.</p>`}
         </div>
 
         <div class="mt-6">
@@ -975,7 +1170,7 @@ window.deleteEvent = async function(backendId){
   try{
     const rec = allData.find(d => d.__backendId === backendId);
     if(!rec) return alert("Händelsen hittas inte.");
-    const label = rec.record_type === "sown" ? "sådd" : rec.record_type === "potted" ? "omskolning" : rec.record_type === "loss" ? "förlust" : rec.record_type;
+    const label = rec.record_type === "sown" ? "sådd" : rec.record_type === "potted" ? "omskolning" : rec.record_type === "planted_out" ? "utplantering" : rec.record_type === "loss" ? "förlust" : rec.record_type;
     if(!confirm("Ta bort " + label + " för " + (rec.variety_name || "") + "?")) return;
     await deleteRecord(backendId);
 
@@ -998,19 +1193,19 @@ window.editEvent = async function(backendId){
     if(!rec) return alert("Händelsen hittas inte.");
     const type = rec.record_type;
 
-    if(type === "sown" || type === "potted"){
-      const currentCount = type === "sown" ? rec.sown_count : (rec.potted_count ?? rec.sown_count);
+    if(type === "sown" || type === "potted" || type === "planted_out"){
+      const currentCount = type === "sown" ? rec.sown_count : type === "potted" ? (rec.potted_count ?? rec.sown_count) : (rec.planted_out_count ?? 0);
       const newCount = prompt("Antal (frön/plantor):", String(currentCount ?? ""));
       if(newCount === null) return;
       const count = parseInt(newCount, 10);
       if(Number.isNaN(count) || count < 0) return alert("Ogiltigt antal.");
 
-      const dateKey = type === "sown" ? "sown_date" : "potted_date";
+      const dateKey = type === "sown" ? "sown_date" : type === "potted" ? "potted_date" : "planted_out_date";
       const currentDate = (rec[dateKey] || "").slice(0,10) || "";
       const newDate = prompt("Datum (YYYY-MM-DD):", currentDate);
       if(newDate === null) return;
 
-      const byKey = type === "sown" ? "sown_by" : "potted_by";
+      const byKey = type === "sown" ? "sown_by" : type === "potted" ? "potted_by" : "planted_out_by";
       const newBy = prompt("Vem? (Elin/Louise):", rec[byKey] || "");
       if(newBy === null) return;
 
@@ -1019,10 +1214,23 @@ window.editEvent = async function(backendId){
         patch.sown_count = count;
         patch.sown_date = newDate;
         patch.sown_by = newBy;
-      }else{
+      }else if(type === "potted"){
         patch.potted_count = count;
         patch.potted_date = newDate + "T00:00:00Z";
         patch.potted_by = newBy;
+      }else{
+        const newGarden = prompt("Vems trädgård?", rec.garden_name || "");
+        if(newGarden === null) return;
+        const newLocation = prompt("Plats i trädgården:", rec.location_name || "");
+        if(newLocation === null) return;
+        const newNote = prompt("Anteckning:", rec.location_note || "");
+        if(newNote === null) return;
+        patch.planted_out_count = count;
+        patch.planted_out_date = newDate + "T00:00:00Z";
+        patch.planted_out_by = newBy;
+        patch.garden_name = newGarden;
+        patch.location_name = newLocation;
+        patch.location_note = newNote;
       }
       await updateRecord(backendId, patch);
       alert("Uppdaterat ✅");
@@ -1263,9 +1471,3 @@ function renderInstallCard(installed=false){
     `;
   }
 }
-
-// ---------- Runtime safety ----------
-window.addEventListener("error", (event) => {
-  console.error("Runtime error:", event.error || event.message);
-});
-
