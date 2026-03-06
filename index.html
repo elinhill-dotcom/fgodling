@@ -147,6 +147,57 @@
     border: 1px solid rgba(160,120,120,.20) !important;
   }
 </style>
+
+<style id="storybook-dashboard-theme">
+  .storybook-shell{ position:relative; overflow:hidden; }
+  .storybook-shell::before{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(244,239,232,.55), rgba(251,250,248,0));
+    pointer-events:none;
+  }
+  .storybook-title-wrap,.storybook-section,.storybook-menu,.storybook-stats,.storybook-recent-list,#person-stats{
+    position:relative; z-index:1;
+  }
+  .storybook-subtitle{ color:var(--muted); font-size:.95rem; margin:0; }
+  .storybook-title{ font-size:clamp(2rem, 4vw, 3.2rem); line-height:1.05; margin:.2rem 0 0; }
+  .storybook-menu{ display:grid; gap:12px; }
+  @media (min-width:768px){ .storybook-menu{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  .storybook-menu-item{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;
+    text-align:left; padding:18px 20px; border-radius:20px; border:1px solid var(--line);
+    box-shadow:var(--shadow-soft); font-weight:600; color:var(--ink); background:#fbfaf8;
+  }
+  .storybook-menu-item span{ font-size:1.35rem; line-height:1; opacity:.6; }
+  .storybook-menu-item.peach{ background:#f7efe8; }
+  .storybook-menu-item.sage{ background:#eef3ec; }
+  .storybook-menu-item.lavender{ background:#f3eff6; }
+  .storybook-section h2{ margin:0 0 14px; font-size:1.8rem; line-height:1.1; }
+  .storybook-stats{ display:grid; gap:10px; }
+  .storybook-stat-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 16px; border-radius:18px; background:#fff; border:1px solid var(--line);
+    box-shadow:var(--shadow-soft); font-size:1rem;
+  }
+  .storybook-stat-row strong{ font-family:'Playfair Display', serif; font-size:1.5rem; color:var(--ink); }
+  .storybook-recent-list{ display:grid; gap:10px; }
+  .storybook-recent-item{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:14px 16px; border-radius:18px; background:#fff; border:1px solid var(--line);
+    box-shadow:var(--shadow-soft);
+  }
+  .storybook-recent-item strong{ color:var(--ink); font-weight:600; }
+  .storybook-empty{
+    padding:18px; border-radius:18px; background:#fff; border:1px dashed var(--line); color:var(--muted);
+  }
+  #person-stats > div{
+    border-radius:20px !important; border:1px solid var(--line); box-shadow:var(--shadow-soft);
+    background:#fff !important; padding:18px !important;
+  }
+  #person-stats p:first-child{
+    font-family:'Playfair Display', serif; font-size:1.45rem; line-height:1.1; margin-bottom:4px;
+  }
+</style>
+
 </head>
 
 <body class="bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50">
