@@ -265,6 +265,10 @@ function updatePersonStats(sown, losses){
 }
 
 function updateCharts(sown, potted, losses){
+  const successCanvas = document.getElementById("successChart");
+  const weeklyCanvas = document.getElementById("weeklyLossChart");
+  const categoryCanvas = document.getElementById("categoryChart");
+  if(!successCanvas || !weeklyCanvas || !categoryCanvas) return;
   // Success chart
   const elinSown = sown.filter(d => (d.sown_by||"").includes("Elin")).reduce((s,d)=> s + (Number(d.sown_count)||0), 0);
   const louiseSown = sown.filter(d => (d.sown_by||"").includes("Louise")).reduce((s,d)=> s + (Number(d.sown_count)||0), 0);
